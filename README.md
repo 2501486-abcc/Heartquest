@@ -582,7 +582,7 @@ created_at
    ↓
 React
    ↓
-PUT /recoveries/{id}/rating
+PATCH /recoveries/{id}
    ↓
 FastAPI
    ↓
@@ -798,7 +798,7 @@ FastAPIでは以下のAPIを実装する予定です。
 │
 ├── GET  /recoveries
 ├── POST /recoveries
-└── PUT  /recoveries/{id}/rating
+└── PATCH /recoveries/{id}
 
 
 /bookmarks
