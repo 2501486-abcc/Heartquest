@@ -29,8 +29,8 @@ HeartQuestでは、以下の構成を採用します。
              │ HTTPS
              ▼
 ┌──────────────────────────┐
-│ Tailscale Funnel          │
-│ https://xxxxx.ts.net      │
+│ Cloudflare Tunnel          │
+│ https://heartquest.example.com      │
 └────────────┬─────────────┘
              │
              ▼
@@ -95,8 +95,8 @@ HeartQuestでは、以下の構成を採用します。
 | 技術               | 用途                  |
 | ---------------- | ------------------- |
 | Windows PC       | Webサーバ・DBサーバ        |
-| Tailscale        | Windows PCのネットワーク接続 |
-| Tailscale Funnel | インターネットへのHTTPS公開    |
+| cloudflared       | Windows PCとCloudflareを安全に接続 |
+| Cloudflare Tunnel | インターネットへのHTTPS公開       |
 | Git              | バージョン管理             |
 | GitHub           | 2人での共同開発            |
 
@@ -114,7 +114,7 @@ Firebase Authentication
 認証
 
 
-Tailscale Funnel
+Cloudflare Tunnel
         ↓
 「インターネットからWindows PCへどう到達するか」
         ↓
@@ -228,33 +228,141 @@ created_at
 
 # 外部公開
 
-Windows PCは自宅に設置します。
+Windows PCは自宅に設置し、**Cloudflare Tunnel** を使ってHeartQuestをHTTPSで公開します。
 
-他のプレイヤーが好きな場所からアクセスできるようにするため、**Tailscale Funnel** を使用します。
+審査員やプレイヤーは、Tailscaleへの参加、専用アプリのインストール、Cloudflareアカウントへのログインを行う必要はありません。共有された公開URLを通常のスマートフォンまたはPCのブラウザで開くだけでHeartQuestを利用できます。
 
 ```text
-Internet
+審査員 / プレイヤー
+スマホ・PCのブラウザ
    ↓
-HTTPS
+https://heartquest.example.com
    ↓
-https://xxxxx.ts.net
+Cloudflare
    ↓
-Tailscale Funnel
+Cloudflare Tunnel
    ↓
-Windows PC
-   ↓
-React / FastAPI
+Windows PC上の cloudflared
+   ├─ React + Vite（例: localhost:5173）
+   └─ FastAPI（例: localhost:8000）
 ```
 
-これにより、
+`cloudflared` はWindows PCからCloudflareへ外向きの接続を作ります。そのため、次の準備は不要です。
 
 * ルーターのポート開放
 * 固定グローバルIP
 * DDNS
+* 審査員端末へのVPNソフトの導入
 
-などを準備せずにWindows PC上のWebアプリを公開できます。
+公開URLはインターネット上の誰からでも到達できるため、ユーザーデータを扱うAPIではFirebase Authenticationによる認証を必ず維持します。
 
-Tailscale Funnelによって公開されたURLはインターネットからアクセス可能になるため、API側では必ずFirebase Authenticationによる認証を行います。
+## 公開前に必要なもの
+
+* Cloudflareアカウント
+* Cloudflareへ追加し、ネームサーバー設定を完了した独自ドメイン
+* HeartQuestを動かすWindows PC
+* Windows版 `cloudflared`
+* ローカルで起動できるReactフロントエンドとFastAPIバックエンド
+
+Cloudflare Tunnelで公開ホスト名を使うには、対象ドメインをCloudflareで管理している必要があります。設定画面や配布ファイルは更新されることがあるため、[Cloudflare Tunnelの公式セットアップ手順](https://developers.cloudflare.com/cloudflare-one/networks/connectors/cloudflare-tunnel/get-started/create-remote-tunnel/)と[Windows版cloudflaredの公式ダウンロードページ](https://developers.cloudflare.com/cloudflare-one/networks/connectors/cloudflare-tunnel/downloads/)も確認してください。
+
+## 1. Windows PCへcloudflaredをインストールする
+
+公式ダウンロードページから64-bit版Windows MSIを入手してインストールします。インストール後、新しいPowerShellを開いて次を実行します。
+
+```powershell
+cloudflared --version
+```
+
+このコマンドは、`cloudflared` が正しくインストールされ、PowerShellから実行できることを確認します。バージョン情報が表示されれば準備完了です。
+
+## 2. Cloudflare Tunnelを作成する
+
+Cloudflareのダッシュボードで、`Networking > Tunnels` を開き、`Create a tunnel` を選択します。トンネル名は、例えば `heartquest` とします。
+
+Windowsを選ぶと、ダッシュボードにインストール用コマンドが表示されます。管理者権限で開いたPowerShellまたはコマンドプロンプトへ、表示されたコマンドをそのまま貼り付けて実行します。コマンドは概ね次の形です。
+
+```powershell
+cloudflared.exe service install <TUNNEL_TOKEN>
+```
+
+このコマンドは、`cloudflared` をWindowsサービスとして登録し、作成したトンネルへ接続します。Windowsを再起動した後もサービスを起動できる構成になります。
+
+`<TUNNEL_TOKEN>` はトンネルへ接続するための秘密情報です。実際の値をREADME、ソースコード、Issue、チャット、コミットへ貼り付けてはいけません。
+
+## 3. 公開ホスト名を設定する
+
+作成したトンネルの `Routes` から `Published application` を追加します。フロントエンドとバックエンドを別々のローカルポートで動かす場合は、次のように2つ登録します。
+
+| 用途 | 公開ホスト名の例 | Service URLの例 |
+| --- | --- | --- |
+| フロントエンド | `heartquest.example.com` | `http://localhost:5173` |
+| バックエンドAPI | `api-heartquest.example.com` | `http://localhost:8000` |
+
+`example.com` は例なので、実際にCloudflareで管理しているドメインへ置き換えます。ポート番号も、HeartQuestを起動したときに表示される番号が異なる場合は実際の値へ合わせます。
+
+Viteが公開ホスト名からのリクエストを拒否する場合は、所有しているフロントエンド用ホスト名だけをViteの許可ホストへ追加します。すべてのホストを無条件に許可する設定にはしません。
+
+## 4. HeartQuestをWindows PCで起動する
+
+実装後の基本的な起動例は次のとおりです。実際の起動スクリプトやポートが定義された場合は、プロジェクトの設定を優先します。
+
+バックエンド用PowerShell:
+
+```powershell
+cd backend
+.\.venv\Scripts\Activate.ps1
+uvicorn main:app --host 127.0.0.1 --port 8000
+```
+
+`cd backend` はバックエンドのフォルダへ移動します。`.venv` のコマンドはPython仮想環境を有効にします。`uvicorn` のコマンドはFastAPIをWindows PC内の8000番ポートで起動します。`cloudflared` は同じPCから `localhost` へ接続するため、ルーターやLANへ直接公開する目的で `0.0.0.0` を指定する必要はありません。
+
+フロントエンド用PowerShell:
+
+```powershell
+cd frontend
+npm run dev -- --host 127.0.0.1 --port 5173
+```
+
+`cd frontend` はフロントエンドのフォルダへ移動します。`npm run dev` はViteの開発サーバーをWindows PC内の5173番ポートで起動します。
+
+ハッカソンの最終公開では、実装時に用意した本番用の起動方法がある場合はそちらを使用します。
+
+## 5. フロントエンドと認証を公開URLへ合わせる
+
+フロントエンドがFastAPIへアクセスするURLは、ローカル開発時の `http://localhost:8000` ではなく、公開したAPIのURL（例: `https://api-heartquest.example.com`）へ切り替えます。
+
+あわせて、次を確認します。
+
+* FastAPIのCORS許可元にフロントエンドの公開URLだけを追加する
+* Firebase Authenticationの承認済みドメインにフロントエンドの公開ホスト名を追加する
+* APIキー、Firebase秘密鍵、トンネルトークンをフロントエンドやGitへ含めない
+* 審査員のアクセスを妨げるCloudflare Accessの追加ログインを、必要性の確認なく必須にしない
+
+## 6. 公開状態を確認する
+
+まずWindows PC自身のブラウザで、ローカルURLを開いてフロントエンドとバックエンドが動いていることを確認します。
+
+```text
+http://localhost:5173
+http://localhost:8000/docs
+```
+
+次にCloudflareのトンネル一覧で状態が `Healthy` になっていることを確認し、Wi-Fiを切ったスマートフォンなどWindows PCとは別のネットワークから、次の公開URLへアクセスします。
+
+```text
+https://heartquest.example.com
+```
+
+ログイン、認証付きAPIアクセス、回復方法の登録、履歴表示まで確認できれば、審査員がTailscaleなしで利用できる公開構成の確認は完了です。
+
+Windowsサービスの状態は、管理者権限のPowerShellで次のコマンドから確認できます。
+
+```powershell
+Get-Service cloudflared
+```
+
+このコマンドは `cloudflared` サービスが実行中か停止中かを表示します。公開を一時停止する場合は `Stop-Service cloudflared`、再開する場合は `Start-Service cloudflared` を管理者権限で実行します。審査中はWindows PC、HeartQuest、`cloudflared` を起動したままにします。
 
 ---
 
@@ -834,7 +942,7 @@ SQLite       Firebase Admin SDK
    ↓
 Internet
    ↓
-Tailscale Funnel
+Cloudflare Tunnel
    ↓
 Windows PC
    ↓
@@ -864,7 +972,7 @@ React
    │
    │ Firebase ID Token
    ▼
-Tailscale Funnel
+Cloudflare Tunnel
    ↓
 FastAPI
    ↓
@@ -945,7 +1053,7 @@ Chart.js
                                     │
                                     │ REST API
                                     │
-                          Tailscale Funnel
+                          Cloudflare Tunnel
                                     │
                                     ▼
                            ┌────────────────┐
@@ -976,7 +1084,7 @@ Chart.js
 * AI回復方法提案
 * 回復履歴
 * SQLite保存
-* Tailscale Funnelによる外部公開
+* Cloudflare Tunnelによる外部公開
 
 これらが動けば、HeartQuestの基本的な体験をデモできます。
 
@@ -1061,8 +1169,8 @@ Server
 
 
 Network
-├── Tailscale
-└── Tailscale Funnel
+├── cloudflared
+└── Cloudflare Tunnel
 
 
 Development
@@ -1083,7 +1191,7 @@ HeartQuestでは、ハッカソンという限られた開発時間を考慮し�
 そのため、
 
 * 認証はFirebaseに任せる
-* ネットワーク公開はTailscale Funnelに任せる
+* ネットワーク公開はCloudflare Tunnelに任せる
 * DBはSQLiteにする
 * バックエンドはFastAPIにする
 * フロントエンドはReactにする

@@ -40,7 +40,7 @@ HeartQuestの基本仕様、技術構成、通信構成、機能、API、デー�
 * システム構成
 * 技術スタック
 * Firebase Authenticationによる認証方式
-* Tailscale Funnelによる外部公開
+* Cloudflare Tunnelによる外部公開
 * FastAPIのAPI構成
 * SQLiteのデータ構成
 * AIによる回復方法提案・分析
@@ -119,8 +119,8 @@ HeartQuestではREADME.mdで定義されている以下の技術を使用する�
 
 ## Network
 
-* Tailscale
-* Tailscale Funnel
+* Cloudflare Tunnel
+* cloudflared
 
 ## Development
 
@@ -288,7 +288,7 @@ README.mdに基づき、以下を優先する。
 * AIによる回復方法提案
 * 回復履歴
 * SQLiteへの保存
-* Tailscale Funnelによる外部公開
+* Cloudflare Tunnelによる外部公開
 
 これらはHeartQuestの基本体験を構成するため、最優先で正常動作させる。
 
@@ -347,7 +347,7 @@ Windows PC側でユーザーのパスワードを管理しない。
 
 # 13. 認証が必要なAPIを迂回しない
 
-Tailscale Funnelで公開されたURLはインターネットからアクセス可能である。
+Cloudflare Tunnelで公開されたURLはインターネットからアクセス可能である。
 
 そのため、ユーザーデータを扱うAPIではFirebase Authenticationによる認証を前提とする。
 
@@ -509,20 +509,33 @@ AI機能そのものを複雑化するより、HeartQuestのユーザー体験�
 
 # 19. 外部公開方式を変更しない
 
-Windows PCを外部公開するためにTailscaleおよびTailscale Funnelを使用する。
+Windows PC上のHeartQuestを外部公開するためにCloudflare Tunnelと `cloudflared` を使用する。
 
-ユーザーの許可なく、
+審査員やプレイヤーは、Tailscale、Cloudflare One Client / WARP、Cloudflareアカウントへの参加を必要とせず、通常のブラウザから公開URLへアクセスできる構成とする。
 
-* ルーターのポート開放
-* DDNS
-* VPS
-* AWS
-* Azure
-* Google Cloud
-* Cloudflare Tunnel
-* その他の公開方法
+原則として、Cloudflareで管理する公開ホスト名を次のローカルサービスへ接続する。
 
-へ変更しない。
+```text
+フロントエンド公開ホスト名
+→ http://localhost:5173 など、実際のフロントエンドポート
+
+API公開ホスト名
+→ http://localhost:8000 など、実際のFastAPIポート
+```
+
+実際のポート番号や起動方法がプロジェクト設定で定義されている場合は、その設定を優先する。
+
+公開構成を変更する際は、以下を守る。
+
+* ルーターのポート開放を行わない
+* 固定グローバルIPやDDNSを前提にしない
+* TailscaleまたはTailscale Funnelへ戻さない
+* 審査員端末へのVPNクライアント導入を前提にしない
+* Cloudflare Accessによる追加ログインを、ユーザーの許可なく必須にしない
+* Cloudflare Tunnelを迂回してFastAPI、Vite、SQLiteなどを直接インターネットへ公開しない
+* VPS、AWS、Azure、Google Cloud、その他の公開方法へ無断で変更しない
+
+公開URLはインターネットから到達可能であるため、Firebase Authenticationによるアプリケーション認証を維持する。
 
 ---
 
@@ -577,6 +590,8 @@ heartquest/
 * Firebase秘密鍵
 * Firebase Admin SDKのサービスアカウント秘密情報
 * アクセストークン
+* Cloudflare Tunnelのトークン
+* `cert.pem` およびトンネル認証情報のJSONファイル
 * パスワード
 * 個人用認証情報
 * `.env` に保存される秘密情報
