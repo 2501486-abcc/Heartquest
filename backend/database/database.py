@@ -1,5 +1,7 @@
 import sqlite3
+from contextlib import contextmanager
 from pathlib import Path
+from typing import Iterator
 
 
 DEFAULT_DATABASE_PATH = Path(__file__).with_name("heartquest.db")
@@ -54,14 +56,22 @@ CREATE TABLE IF NOT EXISTS bookmarks (
 """
 
 
+@contextmanager
 def get_connection(
     database_path: str | Path = DEFAULT_DATABASE_PATH,
-) -> sqlite3.Connection:
+) -> Iterator[sqlite3.Connection]:
     """Return a SQLite connection with foreign-key checks enabled."""
     connection = sqlite3.connect(database_path)
     connection.row_factory = sqlite3.Row
     connection.execute("PRAGMA foreign_keys = ON")
-    return connection
+    try:
+        yield connection
+        connection.commit()
+    except Exception:
+        connection.rollback()
+        raise
+    finally:
+        connection.close()
 
 
 def init_database(database_path: str | Path = DEFAULT_DATABASE_PATH) -> None:

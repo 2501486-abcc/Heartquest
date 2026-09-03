@@ -129,6 +129,97 @@ class RecoveriesApiTests(unittest.TestCase):
         ):
             self.assertEqual(created[field], payload[field])
 
+    def test_patch_adds_feedback_after_recovery(self) -> None:
+        created = self.client.post(
+            "/recoveries",
+            json={
+                "user_id": self.user_id,
+                "activity": "散歩",
+                "category": "運動",
+                "before_mood": 3,
+                "before_state": "疲れている",
+            },
+        ).json()
+
+        response = self.client.patch(
+            f"/recoveries/{created['id']}",
+            json={
+                "after_mood": 8,
+                "after_comment": "気分が軽くなった",
+                "rating": 9,
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        updated = response.json()
+        self.assertEqual(updated["after_mood"], 8)
+        self.assertEqual(updated["after_comment"], "気分が軽くなった")
+        self.assertEqual(updated["rating"], 9)
+        self.assertEqual(updated["activity"], created["activity"])
+        self.assertEqual(updated["before_mood"], created["before_mood"])
+
+        list_response = self.client.get(
+            "/recoveries",
+            params={"user_id": self.user_id},
+        )
+        self.assertEqual(list_response.json(), [updated])
+
+    def test_patch_only_changes_provided_fields(self) -> None:
+        created = self.client.post(
+            "/recoveries",
+            json={
+                "user_id": self.user_id,
+                "activity": "入浴",
+                "category": "リラックス",
+                "after_mood": 6,
+                "after_comment": "少し落ち着いた",
+                "rating": 7,
+            },
+        ).json()
+
+        response = self.client.patch(
+            f"/recoveries/{created['id']}",
+            json={"rating": 8},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        updated = response.json()
+        self.assertEqual(updated["after_mood"], 6)
+        self.assertEqual(updated["after_comment"], "少し落ち着いた")
+        self.assertEqual(updated["rating"], 8)
+
+    def test_patch_unknown_recovery_returns_404(self) -> None:
+        response = self.client.patch(
+            "/recoveries/99999",
+            json={"rating": 8},
+        )
+
+        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.json(), {"detail": "Recovery not found"})
+
+    def test_patch_rejects_invalid_feedback(self) -> None:
+        created = self.client.post(
+            "/recoveries",
+            json={
+                "user_id": self.user_id,
+                "activity": "散歩",
+                "category": "運動",
+            },
+        ).json()
+
+        for payload in (
+            {"after_mood": 0},
+            {"after_mood": 11},
+            {"rating": 0},
+            {"rating": 11},
+        ):
+            with self.subTest(payload=payload):
+                response = self.client.patch(
+                    f"/recoveries/{created['id']}",
+                    json=payload,
+                )
+                self.assertEqual(response.status_code, 422)
+
     def test_unknown_user_returns_404(self) -> None:
         create_response = self.client.post(
             "/recoveries",

@@ -32,6 +32,12 @@ class RecoveryResponse(RecoveryCreate):
     updated_at: datetime
 
 
+class RecoveryUpdate(BaseModel):
+    after_mood: int | None = Field(default=None, ge=1, le=10)
+    after_comment: str | None = None
+    rating: int | None = Field(default=None, ge=1, le=10)
+
+
 def _database_path(request: Request):
     return request.app.state.database_path
 
@@ -66,6 +72,45 @@ def create_recovery(payload: RecoveryCreate, request: Request):
         ).fetchone()
 
     return dict(row)
+
+
+@router.patch("/{recovery_id}", response_model=RecoveryResponse)
+def update_recovery(
+    recovery_id: Annotated[int, Field(gt=0)],
+    payload: RecoveryUpdate,
+    request: Request,
+):
+    database_path = _database_path(request)
+    recovery_data = payload.model_dump(exclude_unset=True)
+
+    with get_connection(database_path) as connection:
+        row = connection.execute(
+            "SELECT * FROM recoveries WHERE id = ?",
+            (recovery_id,),
+        ).fetchone()
+        if row is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Recovery not found",
+            )
+
+        if recovery_data:
+            assignments = ", ".join(f"{column} = ?" for column in recovery_data)
+            connection.execute(
+                f"""
+                UPDATE recoveries
+                SET {assignments}, updated_at = CURRENT_TIMESTAMP
+                WHERE id = ?
+                """,
+                (*recovery_data.values(), recovery_id),
+            )
+
+        updated_row = connection.execute(
+            "SELECT * FROM recoveries WHERE id = ?",
+            (recovery_id,),
+        ).fetchone()
+
+    return dict(updated_row)
 
 
 @router.get("", response_model=list[RecoveryResponse])
