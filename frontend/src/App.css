@@ -9,13 +9,184 @@ button {
 }
 
 .app-shell {
+  --side-nav-width: 248px;
   min-height: 100svh;
-  padding-bottom: 96px;
+}
+
+.app-shell.is-sidebar-collapsed {
+  --side-nav-width: 88px;
+}
+
+.app-content {
+  margin-left: var(--side-nav-width);
+  min-height: 100svh;
+  min-width: 0;
+  transition: margin-left 180ms ease;
+}
+
+.side-nav {
+  background: rgba(255, 253, 247, 0.96);
+  border-right: 1px solid var(--line);
+  display: flex;
+  flex-direction: column;
+  inset: 0 auto 0 0;
+  padding: 26px 18px 22px;
+  position: fixed;
+  transition: width 180ms ease;
+  width: var(--side-nav-width);
+  z-index: 30;
+}
+
+.side-nav-header {
+  align-items: center;
+  display: flex;
+  min-height: 44px;
+  position: relative;
+}
+
+.side-nav .brand-button {
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.side-nav .brand-mark {
+  flex: 0 0 auto;
+}
+
+.side-nav-label {
+  overflow: hidden;
+  transition: opacity 140ms ease, width 180ms ease;
+  white-space: nowrap;
+}
+
+.side-nav-toggle {
+  align-items: center;
+  background: var(--paper);
+  border: 1px solid var(--line-strong);
+  border-radius: 50%;
+  box-shadow: 0 6px 16px rgba(53, 65, 59, 0.1);
+  color: var(--forest);
+  cursor: pointer;
+  display: flex;
+  font-family: var(--font-display);
+  font-size: 1.35rem;
+  height: 44px;
+  justify-content: center;
+  position: absolute;
+  right: -40px;
+  top: 0;
+  width: 44px;
+}
+
+.side-nav-links {
+  display: grid;
+  gap: 8px;
+  margin-top: 54px;
+}
+
+.side-nav-links button {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  border-radius: 16px;
+  color: var(--ink-muted);
+  cursor: pointer;
+  display: grid;
+  font-size: 0.9rem;
+  font-weight: 800;
+  gap: 10px;
+  grid-template-columns: 44px minmax(0, 1fr);
+  min-height: 56px;
+  padding: 6px 10px;
+  text-align: left;
+  width: 100%;
+}
+
+.side-nav-links button:hover {
+  background: #f5f2e9;
+  color: var(--forest);
+}
+
+.side-nav-links button.is-active {
+  background: var(--mint-soft);
+  color: var(--forest);
+}
+
+.side-nav-links .nav-symbol {
+  align-items: center;
+  background: rgba(255, 255, 255, 0.7);
+  border-radius: 12px;
+  display: flex;
+  height: 44px;
+  justify-content: center;
+  width: 44px;
+}
+
+.side-profile {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  border-top: 1px solid var(--line);
+  color: var(--ink-soft);
+  cursor: pointer;
+  display: grid;
+  gap: 12px;
+  grid-template-columns: 40px minmax(0, 1fr);
+  margin-top: auto;
+  min-height: 64px;
+  padding: 18px 6px 0;
+  text-align: left;
+  width: 100%;
+}
+
+.side-profile .profile-avatar {
+  height: 40px;
+  width: 40px;
+}
+
+.side-profile-copy {
+  display: flex;
+  flex-direction: column;
+}
+
+.side-profile-copy strong {
+  color: var(--ink);
+  font-size: 0.88rem;
+}
+
+.side-profile-copy small {
+  color: var(--ink-muted);
+  font-size: 0.75rem;
+  margin-top: 2px;
+}
+
+.is-sidebar-collapsed .side-nav {
+  padding-inline: 14px;
+}
+
+.is-sidebar-collapsed .side-nav-label {
+  opacity: 0;
+  width: 0;
+}
+
+.is-sidebar-collapsed .side-nav-links button {
+  gap: 0;
+  grid-template-columns: 44px 0;
+  justify-content: center;
+  padding-inline: 8px;
+}
+
+.is-sidebar-collapsed .side-profile {
+  gap: 0;
+  grid-template-columns: 40px 0;
+  justify-content: center;
+  padding-inline: 10px;
 }
 
 .topbar {
   align-items: center;
-  display: flex;
+  display: none;
   justify-content: space-between;
   margin: 0 auto;
   max-width: 1180px;
@@ -232,6 +403,9 @@ button {
 .text-button:focus-visible,
 .icon-button:focus-visible,
 .bottom-nav button:focus-visible,
+.side-nav-links button:focus-visible,
+.side-nav-toggle:focus-visible,
+.side-profile:focus-visible,
 .brand-button:focus-visible {
   outline: 3px solid rgba(234, 112, 101, 0.35);
   outline-offset: 3px;
@@ -504,7 +678,7 @@ button {
   border-radius: 20px;
   bottom: 20px;
   box-shadow: 0 14px 40px rgba(53, 65, 59, 0.13);
-  display: flex;
+  display: none;
   gap: 4px;
   left: 50%;
   padding: 6px;
@@ -698,6 +872,23 @@ button {
 }
 
 @media (max-width: 900px) {
+  .app-shell {
+    padding-bottom: 96px;
+  }
+
+  .app-content {
+    margin-left: 0;
+  }
+
+  .side-nav {
+    display: none;
+  }
+
+  .topbar,
+  .bottom-nav {
+    display: flex;
+  }
+
   .login-page {
     grid-template-columns: 1fr;
   }
@@ -739,6 +930,14 @@ button {
   }
 
   .home-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (min-width: 901px) and (max-width: 1200px) {
+  .home-grid,
+  .charts-grid,
+  .suggestion-grid {
     grid-template-columns: 1fr;
   }
 }
