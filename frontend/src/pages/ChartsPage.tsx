@@ -57,7 +57,16 @@ export function ChartsPage({ analytics, onBack }: ChartsPageProps) {
             </div>
             <span className="chart-legend-dot">自己評価</span>
           </div>
-          <div className="bar-chart" aria-label="4月から9月までの平均回復スコア">
+          <div
+            className="bar-chart"
+            aria-label={
+              '4月から9月までの平均回復スコア。' +
+              analytics.monthly
+                .map((month) => `${month.label} ${month.score.toFixed(1)}`)
+                .join('、')
+            }
+            role="img"
+          >
             <div className="bar-grid" aria-hidden="true">
               <span>10</span><i />
               <span>8</span><i />
@@ -90,7 +99,13 @@ export function ChartsPage({ analytics, onBack }: ChartsPageProps) {
             <div
               className="donut-chart"
               style={{ background: 'conic-gradient(' + donutGradient + ')' }}
-              aria-label="高評価だった回復方法の割合"
+              aria-label={
+                '高評価だった回復方法の割合。' +
+                analytics.breakdown
+                  .map((item) => `${item.label} ${item.percentage}%`)
+                  .join('、')
+              }
+              role="img"
             >
               <span><strong>35%</strong>散歩</span>
             </div>

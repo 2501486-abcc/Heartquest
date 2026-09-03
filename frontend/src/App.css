@@ -38,6 +38,7 @@ button {
   background: transparent;
   border: 0;
   cursor: pointer;
+  min-height: 44px;
   padding: 0;
 }
 
@@ -112,7 +113,7 @@ button {
 
 .eyebrow {
   color: var(--forest);
-  font-size: 0.66rem;
+  font-size: 0.75rem;
   font-weight: 850;
   letter-spacing: 0.16em;
   margin: 0 0 8px;
@@ -186,7 +187,7 @@ button {
 
 .soft-label {
   color: #d9eadc;
-  font-size: 0.65rem;
+  font-size: 0.75rem;
   font-weight: 850;
   letter-spacing: 0.17em;
 }
@@ -340,8 +341,14 @@ button {
   border: 0;
   color: var(--forest);
   cursor: pointer;
-  font-size: 0.76rem;
+  font-size: 0.84rem;
   font-weight: 800;
+}
+
+.text-button {
+  align-items: center;
+  display: inline-flex;
+  min-height: 44px;
 }
 
 .icon-button {
@@ -350,9 +357,9 @@ button {
   border-radius: 50%;
   display: flex;
   font-size: 1rem;
-  height: 38px;
+  height: 44px;
   justify-content: center;
-  width: 38px;
+  width: 44px;
 }
 
 .summary-content {
@@ -396,7 +403,7 @@ button {
 
 .score-ring span {
   color: var(--ink-muted);
-  font-size: 0.68rem;
+  font-size: 0.8rem;
 }
 
 .summary-copy > strong {
@@ -409,7 +416,7 @@ button {
 
 .summary-copy p {
   color: var(--ink-muted);
-  font-size: 0.78rem;
+  font-size: 0.88rem;
   line-height: 1.65;
 }
 
@@ -467,12 +474,12 @@ button {
 
 .history-copy strong {
   color: var(--ink);
-  font-size: 0.82rem;
+  font-size: 0.94rem;
 }
 
 .history-copy span {
   color: var(--ink-muted);
-  font-size: 0.68rem;
+  font-size: 0.8rem;
   margin-top: 2px;
 }
 
@@ -486,7 +493,7 @@ button {
 .history-score small {
   color: var(--ink-muted);
   font-family: var(--font-body);
-  font-size: 0.58rem;
+  font-size: 0.72rem;
   font-weight: 500;
 }
 
@@ -514,10 +521,10 @@ button {
   color: var(--ink-muted);
   cursor: pointer;
   display: flex;
-  font-size: 0.68rem;
+  font-size: 0.78rem;
   font-weight: 800;
   gap: 7px;
-  min-height: 43px;
+  min-height: 50px;
   padding: 0 18px;
 }
 
@@ -649,7 +656,7 @@ button {
 .field-label {
   color: var(--ink-soft);
   display: block;
-  font-size: 0.72rem;
+  font-size: 0.82rem;
   font-weight: 800;
   margin: 16px 0 7px;
 }
@@ -678,7 +685,7 @@ button {
 
 .demo-notice {
   color: var(--ink-muted);
-  font-size: 0.64rem;
+  font-size: 0.75rem;
   line-height: 1.6;
   margin: 20px 0 0;
   text-align: center;
@@ -686,7 +693,7 @@ button {
 
 .demo-notice span {
   color: var(--mint);
-  font-size: 0.5rem;
+  font-size: 0.62rem;
   margin-right: 6px;
 }
 
@@ -823,6 +830,8 @@ button {
   background: transparent;
   border: 0;
   cursor: pointer;
+  min-height: 44px;
+  min-width: 44px;
   padding: 0;
 }
 
@@ -883,9 +892,10 @@ button {
   color: var(--forest);
   cursor: pointer;
   display: inline-flex;
-  font-size: 0.74rem;
+  font-size: 0.84rem;
   font-weight: 800;
   gap: 8px;
+  min-height: 44px;
   padding: 0;
 }
 
@@ -901,7 +911,7 @@ button {
   color: var(--forest);
   cursor: pointer;
   display: inline-flex;
-  font-size: 0.76rem;
+  font-size: 0.84rem;
   font-weight: 800;
   gap: 12px;
   justify-content: center;
@@ -1055,7 +1065,7 @@ button {
 }
 
 .mood-options span {
-  font-size: 0.58rem;
+  font-size: 0.76rem;
   line-height: 1.35;
 }
 
@@ -1070,7 +1080,7 @@ button {
 
 .checkin-footer p {
   color: var(--ink-muted);
-  font-size: 0.78rem;
+  font-size: 0.88rem;
   margin: 0;
 }
 
@@ -1122,7 +1132,7 @@ button {
 
 .ai-invite-card > div:nth-child(2) > span {
   color: #cfe3d3;
-  font-size: 0.6rem;
+  font-size: 0.75rem;
   font-weight: 850;
   letter-spacing: 0.15em;
 }
@@ -1135,7 +1145,7 @@ button {
 
 .ai-invite-card p {
   color: rgba(255, 253, 247, 0.7);
-  font-size: 0.75rem;
+  font-size: 0.86rem;
   margin: 0;
 }
 
@@ -1154,7 +1164,7 @@ button {
 
 .method-section-heading > span {
   color: var(--ink-muted);
-  font-size: 0.7rem;
+  font-size: 0.8rem;
 }
 
 .method-grid,
@@ -1220,7 +1230,7 @@ button {
 
 .method-meta {
   color: var(--forest);
-  font-size: 0.58rem;
+  font-size: 0.75rem;
   font-weight: 850;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -1234,7 +1244,7 @@ button {
 
 .method-card-copy > p {
   color: var(--ink-muted);
-  font-size: 0.7rem;
+  font-size: 0.84rem;
   line-height: 1.6;
   margin: 0;
 }
@@ -1246,11 +1256,12 @@ button {
   color: var(--forest);
   cursor: pointer;
   display: flex;
-  font-size: 0.68rem;
+  font-size: 0.82rem;
   font-weight: 850;
   gap: 8px;
   grid-column: 2 / -1;
   justify-self: start;
+  min-height: 44px;
   padding: 2px 0;
 }
 
@@ -1268,6 +1279,8 @@ button {
   color: #aea89b;
   cursor: pointer;
   font-size: 1.15rem;
+  min-height: 44px;
+  min-width: 44px;
   padding: 0;
 }
 
@@ -1339,7 +1352,7 @@ button {
 
 .ai-context-note p {
   color: var(--ink-soft);
-  font-size: 0.72rem;
+  font-size: 0.84rem;
   line-height: 1.6;
   margin: 0;
 }
@@ -1369,12 +1382,12 @@ button {
 
 .suggestion-reason strong {
   color: var(--forest);
-  font-size: 0.61rem;
+  font-size: 0.75rem;
 }
 
 .suggestion-reason span {
   color: var(--ink-muted);
-  font-size: 0.64rem;
+  font-size: 0.8rem;
   line-height: 1.55;
 }
 
@@ -1448,7 +1461,7 @@ button {
 
 .suggestion-loading p {
   color: var(--ink-muted);
-  font-size: 0.76rem;
+  font-size: 0.86rem;
   margin: 0;
 }
 
@@ -1486,7 +1499,7 @@ button {
 }
 
 .evaluation-method small {
-  font-size: 0.6rem;
+  font-size: 0.75rem;
   opacity: 0.72;
 }
 
@@ -1555,7 +1568,7 @@ button {
 .scale-caption {
   color: var(--ink-muted);
   display: flex;
-  font-size: 0.6rem;
+  font-size: 0.76rem;
   justify-content: space-between;
   margin-top: 8px;
 }
@@ -1575,7 +1588,7 @@ button {
 
 .memo-field > small {
   color: var(--ink-muted);
-  font-size: 0.65rem;
+  font-size: 0.76rem;
 }
 
 .memo-field textarea {
@@ -1590,7 +1603,7 @@ button {
 
 .character-count {
   color: var(--ink-muted);
-  font-size: 0.6rem;
+  font-size: 0.75rem;
   grid-column: 2;
   margin-top: 5px;
   text-align: right;
@@ -1651,7 +1664,7 @@ button {
 
 .analysis-score > span {
   color: #cfe3d3;
-  font-size: 0.56rem;
+  font-size: 0.75rem;
   font-weight: 850;
   letter-spacing: 0.14em;
 }
@@ -1665,7 +1678,7 @@ button {
 
 .analysis-score small {
   color: rgba(255, 255, 255, 0.62);
-  font-size: 0.64rem;
+  font-size: 0.76rem;
 }
 
 .analysis-copy {
@@ -1679,7 +1692,7 @@ button {
   border-radius: 100px;
   color: #f4d79d;
   display: inline-flex;
-  font-size: 0.58rem;
+  font-size: 0.75rem;
   font-weight: 850;
   letter-spacing: 0.1em;
   padding: 6px 10px;
@@ -1694,7 +1707,7 @@ button {
 
 .analysis-copy > p {
   color: rgba(255, 253, 247, 0.72);
-  font-size: 0.82rem;
+  font-size: 0.9rem;
   line-height: 1.8;
   margin: 0;
   max-width: 660px;
@@ -1704,7 +1717,7 @@ button {
   align-items: center;
   color: #e5f3e8;
   display: flex;
-  font-size: 0.68rem;
+  font-size: 0.8rem;
   gap: 8px;
   margin-top: 18px;
 }
@@ -1779,7 +1792,7 @@ button {
 
 .insight-list-card li p {
   color: var(--ink-soft);
-  font-size: 0.76rem;
+  font-size: 0.86rem;
   line-height: 1.6;
   margin: 0;
 }
@@ -1804,7 +1817,7 @@ button {
 
 .next-action-card > p:not(.eyebrow) {
   color: var(--ink-soft);
-  font-size: 0.78rem;
+  font-size: 0.88rem;
   line-height: 1.75;
   margin: 12px 0 24px;
 }
@@ -1818,7 +1831,7 @@ button {
 }
 
 .large-text-button {
-  font-size: 0.78rem;
+  font-size: 0.86rem;
 }
 
 .chart-overview {
@@ -1839,7 +1852,7 @@ button {
 
 .metric-card > span {
   color: var(--ink-muted);
-  font-size: 0.68rem;
+  font-size: 0.82rem;
   grid-column: 1 / -1;
 }
 
@@ -1858,7 +1871,7 @@ button {
 .metric-card small {
   align-self: end;
   color: var(--forest);
-  font-size: 0.62rem;
+  font-size: 0.76rem;
   font-weight: 750;
   padding-bottom: 5px;
 }
@@ -1877,7 +1890,7 @@ button {
 
 .chart-legend-dot {
   color: var(--ink-muted);
-  font-size: 0.6rem;
+  font-size: 0.78rem;
 }
 
 .chart-legend-dot::before {
@@ -1907,12 +1920,12 @@ button {
 
 .bar-grid span {
   color: var(--ink-muted);
-  font-size: 0.55rem;
+  font-size: 0.75rem;
   transform: translateY(-7px);
 }
 
 .bar-grid i {
-  border-top: 1px dashed #e5dfd4;
+  border-top: 1px solid #ddd7cc;
 }
 
 .bars {
@@ -1936,9 +1949,10 @@ button {
 }
 
 .bar-value {
-  color: var(--ink-soft);
-  font-size: 0.55rem;
-  margin-bottom: 4px;
+  color: var(--ink);
+  font-size: 0.78rem;
+  font-weight: 800;
+  margin-bottom: 6px;
 }
 
 .bar-track {
@@ -1960,7 +1974,7 @@ button {
 
 .bar-column strong {
   color: var(--ink-muted);
-  font-size: 0.58rem;
+  font-size: 0.78rem;
   margin-top: 8px;
 }
 
@@ -1994,7 +2008,7 @@ button {
   color: var(--ink-muted);
   display: flex;
   flex-direction: column;
-  font-size: 0.6rem;
+  font-size: 0.76rem;
   position: relative;
   text-align: center;
 }
@@ -2012,7 +2026,7 @@ button {
 .donut-legend li {
   align-items: center;
   display: grid;
-  font-size: 0.68rem;
+  font-size: 0.84rem;
   gap: 8px;
   grid-template-columns: 8px 1fr auto;
   margin: 11px 0;
@@ -2037,7 +2051,7 @@ button {
 }
 
 .ranking-card .muted-text {
-  font-size: 0.65rem;
+  font-size: 0.78rem;
 }
 
 .ranking-card li {
@@ -2056,18 +2070,18 @@ button {
 .rank-number {
   color: var(--coral);
   font-family: var(--font-display);
-  font-size: 0.72rem;
+  font-size: 0.82rem;
 }
 
 .ranking-card li > strong {
   color: var(--ink);
-  font-size: 0.76rem;
+  font-size: 0.88rem;
 }
 
 .rank-bar {
   background: #eeeae1;
   border-radius: 100px;
-  height: 8px;
+  height: 10px;
   overflow: hidden;
 }
 
@@ -2080,7 +2094,7 @@ button {
 
 .rank-count {
   color: var(--ink-muted);
-  font-size: 0.6rem;
+  font-size: 0.76rem;
 }
 
 .rank-score {
@@ -2155,6 +2169,10 @@ button {
 }
 
 @media (max-width: 600px) {
+  .app-shell {
+    padding-bottom: calc(108px + env(safe-area-inset-bottom));
+  }
+
   .page-header {
     margin-bottom: 28px;
   }
@@ -2170,16 +2188,17 @@ button {
   }
 
   .mood-options {
-    gap: 5px;
+    gap: 8px;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
   .mood-options label {
-    min-height: 76px;
-    padding: 10px 2px;
+    min-height: 88px;
+    padding: 12px 6px;
   }
 
   .mood-options span {
-    font-size: 0.5rem;
+    font-size: 0.76rem;
   }
 
   .checkin-footer {
@@ -2224,13 +2243,15 @@ button {
   }
 
   .rating-scale {
-    gap: 4px;
+    gap: 6px;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
   }
 
   .rating-scale label {
-    border-radius: 8px;
-    font-size: 0.7rem;
-    height: 42px;
+    border-radius: 10px;
+    font-size: 0.88rem;
+    font-weight: 750;
+    height: 52px;
   }
 
   .analysis-hero {
@@ -2266,8 +2287,10 @@ button {
   }
 
   .donut-layout {
+    gap: 24px;
     grid-template-columns: 1fr;
     justify-items: center;
+    margin-top: 30px;
   }
 
   .donut-legend {
@@ -2275,25 +2298,83 @@ button {
   }
 
   .ranking-card li {
-    gap: 8px;
-    grid-template-columns: 24px 76px 1fr 28px;
+    align-items: center;
+    gap: 8px 12px;
+    grid-template-columns: 28px minmax(0, 1fr) auto;
+    padding: 18px 0;
+  }
+
+  .rank-number {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .ranking-card li > strong {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .rank-bar {
+    grid-column: 2 / -1;
+    grid-row: 2;
   }
 
   .rank-count {
-    display: none;
+    display: block;
+    grid-column: 2 / -1;
+    grid-row: 3;
+  }
+
+  .rank-score {
+    font-size: 1.05rem;
+    grid-column: 3;
+    grid-row: 1;
   }
 
   .chart-card,
   .ranking-card {
-    padding: 22px 18px;
+    padding: 24px 20px;
   }
 
   .bar-chart {
-    margin-top: 24px;
-    padding-left: 18px;
+    height: 300px;
+    margin-top: 30px;
+    padding-left: 26px;
+  }
+
+  .bar-grid {
+    bottom: 40px;
+    height: 225px;
   }
 
   .bars {
+    height: 238px;
     gap: 6px;
+  }
+
+  .bottom-nav {
+    bottom: calc(10px + env(safe-area-inset-bottom));
+  }
+
+  .login-intro {
+    padding: 28px 22px 38px;
+  }
+
+  .login-intro > div:nth-child(2) {
+    margin-top: 42px;
+  }
+
+  .login-panel {
+    padding: 26px 18px 34px;
+  }
+
+  .login-card {
+    padding: 30px 22px;
+  }
+
+  .login-card input,
+  .custom-method-form input,
+  .memo-field textarea {
+    font-size: 1rem;
   }
 }
