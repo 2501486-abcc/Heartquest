@@ -2577,3 +2577,37 @@ button {
     font-size: 1rem;
   }
 }
+
+.auth-switch {
+  align-items: center;
+  color: var(--ink-muted);
+  display: flex;
+  flex-wrap: wrap;
+  font-size: 0.82rem;
+  gap: 6px;
+  justify-content: center;
+  margin-top: 20px;
+}
+
+.auth-switch-button {
+  background: transparent;
+  border: 0;
+  color: var(--forest);
+  cursor: pointer;
+  font-weight: 800;
+  padding: 4px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.auth-switch-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.form-error {
+  color: #a4433c;
+  font-size: 0.82rem;
+  line-height: 1.5;
+  margin: 12px 0 0;
+}
