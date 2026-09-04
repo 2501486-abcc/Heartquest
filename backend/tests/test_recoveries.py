@@ -119,8 +119,6 @@ class RecoveriesApiTests(unittest.TestCase):
             "after_mood": 8,
             "after_comment": "落ち着いた",
             "rating": 9,
-            "ai_score": 8.5,
-            "ai_comment": "回復効果が高いです",
             "source": "manual",
         }
 
@@ -141,11 +139,176 @@ class RecoveriesApiTests(unittest.TestCase):
             "after_mood",
             "after_comment",
             "rating",
-            "ai_score",
-            "ai_comment",
             "source",
         ):
             self.assertEqual(created[field], payload[field])
+        self.assertIsNone(created["ai_score"])
+        self.assertIsNone(created["ai_comment"])
+
+    def test_create_rejects_client_supplied_ai_evaluation(self) -> None:
+        response = self.client.post(
+            "/recoveries",
+            headers=self.auth_headers(),
+            json={
+                "activity": "散歩",
+                "category": "運動",
+                "ai_score": 10,
+                "ai_comment": "偽装した評価",
+            },
+        )
+
+        self.assertEqual(response.status_code, 422)
+        with get_connection(self.database_path) as connection:
+            count = connection.execute(
+                "SELECT COUNT(*) FROM recoveries"
+            ).fetchone()[0]
+        self.assertEqual(count, 0)
+
+    def test_get_own_recovery(self) -> None:
+        created = self.client.post(
+            "/recoveries",
+            headers=self.auth_headers(),
+            json={"activity": "散歩", "category": "運動"},
+        ).json()
+
+        response = self.client.get(
+            f"/recoveries/{created['id']}",
+            headers=self.auth_headers(),
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json(), created)
+
+    def test_get_unknown_or_another_users_recovery_returns_404(self) -> None:
+        with get_connection(self.database_path) as connection:
+            other_user_id = connection.execute(
+                """
+                INSERT INTO users (firebase_uid, display_name)
+                VALUES (?, ?)
+                """,
+                ("firebase-user-2", "Other User"),
+            ).lastrowid
+            other_recovery_id = connection.execute(
+                """
+                INSERT INTO recoveries (user_id, activity, category)
+                VALUES (?, ?, ?)
+                """,
+                (other_user_id, "睡眠", "休息"),
+            ).lastrowid
+
+        for recovery_id in (99999, other_recovery_id):
+            with self.subTest(recovery_id=recovery_id):
+                response = self.client.get(
+                    f"/recoveries/{recovery_id}",
+                    headers=self.auth_headers(),
+                )
+                self.assertEqual(response.status_code, 404)
+                self.assertEqual(
+                    response.json(),
+                    {"detail": "Recovery not found"},
+                )
+
+    def test_delete_own_recovery_returns_204(self) -> None:
+        created = self.client.post(
+            "/recoveries",
+            headers=self.auth_headers(),
+            json={"activity": "散歩", "category": "運動"},
+        ).json()
+
+        response = self.client.delete(
+            f"/recoveries/{created['id']}",
+            headers=self.auth_headers(),
+        )
+
+        self.assertEqual(response.status_code, 204)
+        self.assertEqual(response.content, b"")
+        get_response = self.client.get(
+            f"/recoveries/{created['id']}",
+            headers=self.auth_headers(),
+        )
+        self.assertEqual(get_response.status_code, 404)
+
+    def test_delete_unknown_or_another_users_recovery_returns_404(self) -> None:
+        with get_connection(self.database_path) as connection:
+            other_user_id = connection.execute(
+                """
+                INSERT INTO users (firebase_uid, display_name)
+                VALUES (?, ?)
+                """,
+                ("firebase-user-2", "Other User"),
+            ).lastrowid
+            other_recovery_id = connection.execute(
+                """
+                INSERT INTO recoveries (user_id, activity, category)
+                VALUES (?, ?, ?)
+                """,
+                (other_user_id, "睡眠", "休息"),
+            ).lastrowid
+
+        for recovery_id in (99999, other_recovery_id):
+            with self.subTest(recovery_id=recovery_id):
+                response = self.client.delete(
+                    f"/recoveries/{recovery_id}",
+                    headers=self.auth_headers(),
+                )
+                self.assertEqual(response.status_code, 404)
+
+        with get_connection(self.database_path) as connection:
+            remaining = connection.execute(
+                "SELECT id FROM recoveries WHERE id = ? AND user_id = ?",
+                (other_recovery_id, other_user_id),
+            ).fetchone()
+        self.assertIsNotNone(remaining)
+
+    def test_list_supports_limit_and_offset(self) -> None:
+        created = [
+            self.client.post(
+                "/recoveries",
+                headers=self.auth_headers(),
+                json={"activity": f"記録{index}", "category": "休息"},
+            ).json()
+            for index in range(4)
+        ]
+
+        response = self.client.get(
+            "/recoveries?limit=2&offset=1",
+            headers=self.auth_headers(),
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json(), [created[2], created[1]])
+
+    def test_invalid_limit_or_offset_returns_422(self) -> None:
+        for query in ("limit=0", "limit=101", "offset=-1"):
+            with self.subTest(query=query):
+                response = self.client.get(
+                    f"/recoveries?{query}",
+                    headers=self.auth_headers(),
+                )
+                self.assertEqual(response.status_code, 422)
+
+    def test_overlong_text_input_returns_422(self) -> None:
+        cases = {
+            "activity": "a" * 201,
+            "category": "a" * 101,
+            "before_state": "a" * 1001,
+            "memo": "a" * 2001,
+            "after_comment": "a" * 2001,
+            "source": "a" * 101,
+        }
+        for field, value in cases.items():
+            with self.subTest(field=field):
+                payload = {
+                    "activity": "散歩",
+                    "category": "運動",
+                    field: value,
+                }
+                response = self.client.post(
+                    "/recoveries",
+                    headers=self.auth_headers(),
+                    json=payload,
+                )
+                self.assertEqual(response.status_code, 422)
 
     def test_patch_adds_feedback_after_recovery(self) -> None:
         created = self.client.post(
@@ -258,9 +421,13 @@ class RecoveriesApiTests(unittest.TestCase):
             json={"activity": "散歩", "category": "運動"},
         )
         list_response = self.client.get("/recoveries")
+        get_response = self.client.get("/recoveries/1")
+        delete_response = self.client.delete("/recoveries/1")
 
         self.assertEqual(create_response.status_code, 401)
         self.assertEqual(list_response.status_code, 401)
+        self.assertEqual(get_response.status_code, 401)
+        self.assertEqual(delete_response.status_code, 401)
 
     def test_invalid_input_returns_422_and_is_not_saved(self) -> None:
         for payload in (
