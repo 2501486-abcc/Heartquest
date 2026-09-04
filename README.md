@@ -21,44 +21,24 @@
 HeartQuestでは、以下の構成を採用します。
 
 ```text
-┌──────────────────────────┐
-│ プレイヤー                │
-│ スマホ / PC のブラウザ     │
-└────────────┬─────────────┘
-             │
-             │ HTTPS
-             ▼
-┌──────────────────────────┐
-│ Cloudflare Tunnel          │
-│ https://heartquest.example.com      │
-└────────────┬─────────────┘
-             │
-             ▼
-┌─────────────────────────────────────┐
-│ 自宅 Windows PC                     │
-│                                     │
-│ ┌─────────────────┐                 │
-│ │ React + Vite    │                 │
-│ │ Frontend        │                 │
-│ └────────┬────────┘                 │
-│          │ REST API                 │
-│          ▼                          │
-│ ┌─────────────────┐                 │
-│ │ FastAPI         │                 │
-│ │ Backend         │                 │
-│ └───────┬─────────┘                 │
-│         │                           │
-│    ┌────┴────┐                      │
-│    ▼         ▼                      │
-│ SQLite   Firebase Admin SDK         │
-│                                     │
-└──────────────┬──────────────────────┘
-               │
-               │ HTTPS
-               ▼
-         ┌─────────────┐
-         │ AI API      │
-         └─────────────┘
+プレイヤーのブラウザ
+    │
+    │ HTTPS
+    ▼
+Cloudflare Pages（React + Vite）
+https://heartquest.yamaguchi-tech.com
+    │
+    │ REST API / HTTPS
+    ▼
+Cloudflare Tunnel
+https://heartquest-api.yamaguchi-tech.com
+    │
+    │ http://localhost:8000
+    ▼
+自宅 Windows PC（FastAPI）
+    ├─ SQLite
+    ├─ Firebase Admin SDK
+    └─ AI API
 ```
 
 ---
@@ -96,7 +76,8 @@ HeartQuestでは、以下の構成を採用します。
 | ---------------- | ------------------- |
 | Windows PC       | Webサーバ・DBサーバ        |
 | cloudflared       | Windows PCとCloudflareを安全に接続 |
-| Cloudflare Tunnel | インターネットへのHTTPS公開       |
+| Cloudflare Tunnel | バックエンドAPIのHTTPS公開       |
+| Cloudflare Pages | フロントエンドの配信       |
 | Git              | バージョン管理             |
 | GitHub           | 2人での共同開発            |
 
@@ -228,7 +209,7 @@ created_at
 
 # 外部公開
 
-Windows PCは自宅に設置し、**Cloudflare Tunnel** を使ってHeartQuestをHTTPSで公開します。
+Issue #10で、フロントエンドは **Cloudflare Pages**、自宅Windows PC上のバックエンドAPIは **Cloudflare Tunnel** を使って公開する構成に確定しました。
 
 審査員やプレイヤーは、Tailscaleへの参加、専用アプリのインストール、Cloudflareアカウントへのログインを行う必要はありません。共有された公開URLを通常のスマートフォンまたはPCのブラウザで開くだけでHeartQuestを利用できます。
 
@@ -236,15 +217,15 @@ Windows PCは自宅に設置し、**Cloudflare Tunnel** を使ってHeartQuest�
 審査員 / プレイヤー
 スマホ・PCのブラウザ
    ↓
-https://heartquest.example.com
+https://heartquest.yamaguchi-tech.com
    ↓
-Cloudflare
+Cloudflare Pages（React + Vite）
+   ↓
+https://heartquest-api.yamaguchi-tech.com
    ↓
 Cloudflare Tunnel
    ↓
-Windows PC上の cloudflared
-   ├─ React + Vite（例: localhost:5173）
-   └─ FastAPI（例: localhost:8000）
+Windows PC上の FastAPI（http://localhost:8000）
 ```
 
 `cloudflared` はWindows PCからCloudflareへ外向きの接続を作ります。そのため、次の準備は不要です。
@@ -262,7 +243,8 @@ Windows PC上の cloudflared
 * Cloudflareへ追加し、ネームサーバー設定を完了した独自ドメイン
 * HeartQuestを動かすWindows PC
 * Windows版 `cloudflared`
-* ローカルで起動できるReactフロントエンドとFastAPIバックエンド
+* Cloudflare PagesでビルドできるReactフロントエンド
+* ローカルで起動できるFastAPIバックエンド
 
 Cloudflare Tunnelで公開ホスト名を使うには、対象ドメインをCloudflareで管理している必要があります。設定画面や配布ファイルは更新されることがあるため、[Cloudflare Tunnelの公式セットアップ手順](https://developers.cloudflare.com/cloudflare-one/networks/connectors/cloudflare-tunnel/get-started/create-remote-tunnel/)と[Windows版cloudflaredの公式ダウンロードページ](https://developers.cloudflare.com/cloudflare-one/networks/connectors/cloudflare-tunnel/downloads/)も確認してください。
 
@@ -290,18 +272,22 @@ cloudflared.exe service install <TUNNEL_TOKEN>
 
 `<TUNNEL_TOKEN>` はトンネルへ接続するための秘密情報です。実際の値をREADME、ソースコード、Issue、チャット、コミットへ貼り付けてはいけません。
 
-## 3. 公開ホスト名を設定する
+## 3. PagesとTunnelを設定する
 
-作成したトンネルの `Routes` から `Published application` を追加します。フロントエンドとバックエンドを別々のローカルポートで動かす場合は、次のように2つ登録します。
+公開先と接続先は次のとおりです。フロントエンドはPagesから配信し、Tunnelの接続先にはしません。
 
-| 用途 | 公開ホスト名の例 | Service URLの例 |
-| --- | --- | --- |
-| フロントエンド | `heartquest.example.com` | `http://localhost:5173` |
-| バックエンドAPI | `api-heartquest.example.com` | `http://localhost:8000` |
+| 用途 | 公開URL | Cloudflare側 | 接続先 |
+| --- | --- | --- | --- |
+| フロントエンド | `https://heartquest.yamaguchi-tech.com` | Cloudflare Pages | Pagesのビルド成果物 |
+| バックエンドAPI | `https://heartquest-api.yamaguchi-tech.com` | Cloudflare Tunnel | `http://localhost:8000` |
 
-`example.com` は例なので、実際にCloudflareで管理しているドメインへ置き換えます。ポート番号も、HeartQuestを起動したときに表示される番号が異なる場合は実際の値へ合わせます。
+Cloudflare Pagesの環境変数には次を設定して、再ビルドします。
 
-Viteが公開ホスト名からのリクエストを拒否する場合は、所有しているフロントエンド用ホスト名だけをViteの許可ホストへ追加します。すべてのホストを無条件に許可する設定にはしません。
+```env
+VITE_API_BASE_URL=https://heartquest-api.yamaguchi-tech.com
+```
+
+作成したTunnelの `Routes` から `Published application` を追加し、公開ホスト名を `heartquest-api.yamaguchi-tech.com`、Service URLを `http://localhost:8000` にします。Tunnel Tokenは秘密情報として扱い、ファイルやログへ記録しません。
 
 ## 4. HeartQuestをWindows PCで起動する
 
@@ -312,12 +298,16 @@ Viteが公開ホスト名からのリクエストを拒否する場合は、所�
 ```powershell
 cd backend
 .\.venv\Scripts\Activate.ps1
+$env:HEARTQUEST_DATABASE_PATH="database/heartquest.db"
+$env:HEARTQUEST_CORS_ORIGINS="https://heartquest.yamaguchi-tech.com"
 uvicorn main:app --host 127.0.0.1 --port 8000
 ```
 
-`cd backend` はバックエンドのフォルダへ移動します。`.venv` のコマンドはPython仮想環境を有効にします。`uvicorn` のコマンドはFastAPIをWindows PC内の8000番ポートで起動します。`cloudflared` は同じPCから `localhost` へ接続するため、ルーターやLANへ直接公開する目的で `0.0.0.0` を指定する必要はありません。
+`HEARTQUEST_DATABASE_PATH` が未設定の場合は従来どおり `backend/database/heartquest.db` を使用します。相対パスは、PowerShellの現在位置ではなく `backend` ディレクトリを基準に解決されます。`.env.example` は設定例であり、dotenv依存は使用していないため、値は上記のようにプロセスの環境変数へ設定します。
 
-フロントエンド用PowerShell:
+`uvicorn` はFastAPIをWindows PC内の8000番ポートで起動します。`cloudflared` は同じPCから `localhost` へ接続するため、ルーターやLANへ直接公開する目的で `0.0.0.0` を指定する必要はありません。
+
+ローカルでフロントエンドを開発する場合だけ、別のPowerShellでViteを起動します。
 
 ```powershell
 cd frontend
@@ -326,11 +316,11 @@ npm run dev -- --host 127.0.0.1 --port 5173
 
 `cd frontend` はフロントエンドのフォルダへ移動します。`npm run dev` はViteの開発サーバーをWindows PC内の5173番ポートで起動します。
 
-ハッカソンの最終公開では、実装時に用意した本番用の起動方法がある場合はそちらを使用します。
+本番のフロントエンドはCloudflare Pagesから配信するため、Windows PCでViteを常時起動したり、ViteをTunnelへ接続したりしません。
 
 ## 5. フロントエンドと認証を公開URLへ合わせる
 
-フロントエンドがFastAPIへアクセスするURLは、ローカル開発時の `http://localhost:8000` ではなく、公開したAPIのURL（例: `https://api-heartquest.example.com`）へ切り替えます。
+フロントエンドがFastAPIへアクセスするURLは `https://heartquest-api.yamaguchi-tech.com`、FastAPIのCORS許可元は `https://heartquest.yamaguchi-tech.com` とします。設定例は `frontend/.env.example` と `backend/.env.example` にあります。
 
 あわせて、次を確認します。
 
@@ -345,16 +335,17 @@ npm run dev -- --host 127.0.0.1 --port 5173
 
 ```text
 http://localhost:5173
-http://localhost:8000/docs
+http://localhost:8000/health
 ```
 
-次にCloudflareのトンネル一覧で状態が `Healthy` になっていることを確認し、Wi-Fiを切ったスマートフォンなどWindows PCとは別のネットワークから、次の公開URLへアクセスします。
+ローカルのヘルスチェックが `{"status":"ok","database":"ok"}` を返すことを確認します。次にCloudflareのトンネル一覧で状態が `Healthy` になっていることを確認し、Windows PCとは別のネットワークから次の両方へアクセスします。
 
 ```text
-https://heartquest.example.com
+https://heartquest.yamaguchi-tech.com
+https://heartquest-api.yamaguchi-tech.com/health
 ```
 
-ログイン、認証付きAPIアクセス、回復方法の登録、履歴表示まで確認できれば、審査員がTailscaleなしで利用できる公開構成の確認は完了です。
+公開APIのヘルスチェックが200を返し、ログイン、認証付きAPIアクセス、回復方法の登録、履歴表示まで確認できれば、審査員がTailscaleなしで利用できる公開構成の確認は完了です。
 
 Windowsサービスの状態は、管理者権限のPowerShellで次のコマンドから確認できます。
 
@@ -363,6 +354,26 @@ Get-Service cloudflared
 ```
 
 このコマンドは `cloudflared` サービスが実行中か停止中かを表示します。公開を一時停止する場合は `Stop-Service cloudflared`、再開する場合は `Start-Service cloudflared` を管理者権限で実行します。審査中はWindows PC、HeartQuest、`cloudflared` を起動したままにします。
+
+## SQLiteの運用
+
+SQLite接続には5秒のロック待ちとWALモードを設定します。起動時に `PRAGMA user_version` を確認し、既存テーブルやデータを削除せずに現在のスキーマバージョンへ更新します。
+
+バックアップはFastAPIを起動したままでも、Python標準の `sqlite3.Connection.backup()` を使う次のコマンドで取得できます。保存先ディレクトリは自動作成されます。
+
+```powershell
+cd backend
+python manage_database.py backup backups\heartquest-20260904.db
+```
+
+復元は書き込みとの競合を避けるため、FastAPIを停止してから実行します。先に現在のDBを別名でバックアップし、復元元と復元先を取り違えていないことを確認してください。
+
+```powershell
+cd backend
+python manage_database.py restore backups\heartquest-20260904.db
+```
+
+復元後はFastAPIを起動し直し、`http://localhost:8000/health` が200を返すことと、必要な履歴が表示されることを確認します。コマンドは `HEARTQUEST_DATABASE_PATH` で指定されたDBを対象とし、未設定時は `backend/database/heartquest.db` を対象とします。
 
 ---
 
@@ -942,9 +953,7 @@ SQLite       Firebase Admin SDK
    ↓
 Internet
    ↓
-Cloudflare Tunnel
-   ↓
-Windows PC
+Cloudflare Pages
    ↓
 React
 ```
@@ -1047,14 +1056,21 @@ Chart.js
                                     │
                                     │
 ┌──────────────────┐        ┌───────┴────────┐
-│ スマホ / PC       │───────▶│ React          │
-│ Browser          │        │ TypeScript     │
+│ スマホ / PC       │───────▶│ Cloudflare     │
+│ Browser          │        │ Pages          │
 └──────────────────┘        └───────┬────────┘
                                     │
-                                    │ REST API
+                                    ▼
+                           ┌────────────────┐
+                           │ React          │
+                           │ TypeScript     │
+                           └───────┬────────┘
                                     │
-                          Cloudflare Tunnel
+                                    │ REST API / HTTPS
+                                    ▼
+                           Cloudflare Tunnel
                                     │
+                                    │ localhost:8000
                                     ▼
                            ┌────────────────┐
                            │ FastAPI        │
@@ -1170,7 +1186,8 @@ Server
 
 Network
 ├── cloudflared
-└── Cloudflare Tunnel
+├── Cloudflare Tunnel
+└── Cloudflare Pages
 
 
 Development
@@ -1191,7 +1208,7 @@ HeartQuestでは、ハッカソンという限られた開発時間を考慮し�
 そのため、
 
 * 認証はFirebaseに任せる
-* ネットワーク公開はCloudflare Tunnelに任せる
+* フロントエンド公開はCloudflare Pages、API公開はCloudflare Tunnelに任せる
 * DBはSQLiteにする
 * バックエンドはFastAPIにする
 * フロントエンドはReactにする

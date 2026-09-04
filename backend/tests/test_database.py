@@ -1,14 +1,22 @@
+import os
 import sqlite3
 import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 
 BACKEND_DIR = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(BACKEND_DIR))
 
-from database import get_connection, init_database
+from database import (
+    SCHEMA_VERSION,
+    SQLITE_BUSY_TIMEOUT_MS,
+    get_connection,
+    init_database,
+    resolve_database_path,
+)
 
 
 class DatabaseSchemaTests(unittest.TestCase):
@@ -86,8 +94,59 @@ class DatabaseSchemaTests(unittest.TestCase):
         )
 
     def test_init_database_can_be_run_repeatedly(self) -> None:
+        with get_connection(self.database_path) as connection:
+            connection.execute(
+                "INSERT INTO users (firebase_uid) VALUES (?)",
+                ("preserved-user",),
+            )
+
         init_database(self.database_path)
-        self.assertTrue(self.database_path.is_file())
+
+        with get_connection(self.database_path) as connection:
+            user = connection.execute(
+                "SELECT firebase_uid FROM users WHERE firebase_uid = ?",
+                ("preserved-user",),
+            ).fetchone()
+        self.assertEqual(user["firebase_uid"], "preserved-user")
+
+    def test_environment_database_path_is_used(self) -> None:
+        environment_database_path = (
+            Path(self.temp_directory.name) / "configured" / "heartquest.db"
+        )
+
+        with patch.dict(
+            os.environ,
+            {"HEARTQUEST_DATABASE_PATH": str(environment_database_path)},
+        ):
+            init_database()
+
+        self.assertTrue(environment_database_path.is_file())
+        with get_connection(environment_database_path) as connection:
+            table = connection.execute(
+                "SELECT name FROM sqlite_master WHERE name = 'users'"
+            ).fetchone()
+        self.assertEqual(table["name"], "users")
+
+    def test_relative_database_path_is_resolved_from_backend_directory(self) -> None:
+        relative_path = Path("runtime") / "heartquest.db"
+
+        with patch.dict(
+            os.environ,
+            {"HEARTQUEST_DATABASE_PATH": str(relative_path)},
+        ):
+            resolved_path = resolve_database_path()
+
+        self.assertEqual(resolved_path, (BACKEND_DIR / relative_path).resolve())
+
+    def test_sqlite_runtime_settings_and_schema_version_are_configured(self) -> None:
+        with get_connection(self.database_path) as connection:
+            busy_timeout = connection.execute("PRAGMA busy_timeout").fetchone()[0]
+            journal_mode = connection.execute("PRAGMA journal_mode").fetchone()[0]
+            user_version = connection.execute("PRAGMA user_version").fetchone()[0]
+
+        self.assertEqual(busy_timeout, SQLITE_BUSY_TIMEOUT_MS)
+        self.assertEqual(journal_mode, "wal")
+        self.assertEqual(user_version, SCHEMA_VERSION)
 
     def test_mood_and_rating_values_must_be_in_range(self) -> None:
         with get_connection(self.database_path) as connection:

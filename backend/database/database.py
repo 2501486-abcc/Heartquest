@@ -1,3 +1,4 @@
+import os
 import sqlite3
 from contextlib import contextmanager
 from pathlib import Path
@@ -5,6 +6,9 @@ from typing import Iterator
 
 
 DEFAULT_DATABASE_PATH = Path(__file__).with_name("heartquest.db")
+BACKEND_DIRECTORY = Path(__file__).resolve().parents[1]
+SQLITE_BUSY_TIMEOUT_MS = 5_000
+SCHEMA_VERSION = 1
 
 _SCHEMA = """
 CREATE TABLE IF NOT EXISTS users (
@@ -58,12 +62,18 @@ CREATE TABLE IF NOT EXISTS bookmarks (
 
 @contextmanager
 def get_connection(
-    database_path: str | Path = DEFAULT_DATABASE_PATH,
+    database_path: str | Path | None = None,
 ) -> Iterator[sqlite3.Connection]:
-    """Return a SQLite connection with foreign-key checks enabled."""
-    connection = sqlite3.connect(database_path)
+    """Return a configured SQLite connection."""
+    path = resolve_database_path(database_path)
+    connection = sqlite3.connect(
+        path,
+        timeout=SQLITE_BUSY_TIMEOUT_MS / 1_000,
+    )
     connection.row_factory = sqlite3.Row
+    connection.execute(f"PRAGMA busy_timeout = {SQLITE_BUSY_TIMEOUT_MS}")
     connection.execute("PRAGMA foreign_keys = ON")
+    connection.execute("PRAGMA journal_mode = WAL")
     try:
         yield connection
         connection.commit()
@@ -74,13 +84,35 @@ def get_connection(
         connection.close()
 
 
-def init_database(database_path: str | Path = DEFAULT_DATABASE_PATH) -> None:
-    """Create the HeartQuest tables when they do not already exist."""
-    path = Path(database_path)
+def resolve_database_path(
+    database_path: str | Path | None = None,
+) -> Path:
+    """Resolve the configured DB path independently from the working directory."""
+    configured_path = database_path
+    if configured_path is None:
+        configured_path = os.getenv("HEARTQUEST_DATABASE_PATH") or DEFAULT_DATABASE_PATH
+
+    path = Path(configured_path)
+    if not path.is_absolute():
+        path = BACKEND_DIRECTORY / path
+    return path.resolve()
+
+
+def init_database(database_path: str | Path | None = None) -> None:
+    """Create or migrate the HeartQuest database without removing existing data."""
+    path = resolve_database_path(database_path)
     path.parent.mkdir(parents=True, exist_ok=True)
 
     with get_connection(path) as connection:
-        connection.executescript(_SCHEMA)
+        current_version = connection.execute("PRAGMA user_version").fetchone()[0]
+        if current_version > SCHEMA_VERSION:
+            raise RuntimeError(
+                "Database schema is newer than this HeartQuest version"
+            )
+
+        if current_version < 1:
+            connection.executescript(_SCHEMA)
+            connection.execute(f"PRAGMA user_version = {SCHEMA_VERSION}")
 
 
 if __name__ == "__main__":
