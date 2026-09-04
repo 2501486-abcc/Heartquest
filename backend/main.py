@@ -23,7 +23,12 @@ def _cors_origins() -> list[str]:
         "HEARTQUEST_CORS_ORIGINS",
         "http://localhost:5173,http://127.0.0.1:5173",
     )
-    return [origin.strip() for origin in configured.split(",") if origin.strip()]
+    origins = [origin.strip() for origin in configured.split(",") if origin.strip()]
+    if "*" in origins:
+        raise ValueError(
+            "HEARTQUEST_CORS_ORIGINS cannot contain '*' when credentials are enabled"
+        )
+    return origins
 
 
 def create_app(database_path: str | Path | None = None) -> FastAPI:
@@ -49,8 +54,8 @@ def create_app(database_path: str | Path | None = None) -> FastAPI:
         CORSMiddleware,
         allow_origins=_cors_origins(),
         allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
+        allow_methods=["GET", "POST", "PATCH", "DELETE"],
+        allow_headers=["Authorization", "Content-Type"],
     )
     application.include_router(users_router)
     application.include_router(recoveries_router)
