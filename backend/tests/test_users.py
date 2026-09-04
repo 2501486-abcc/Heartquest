@@ -118,6 +118,29 @@ class UsersApiTests(unittest.TestCase):
         self.assertEqual(response.status_code, 404)
         self.assertEqual(self.user_count(), 0)
 
+    @patch("services.firebase.verify_firebase_id_token", return_value="new-firebase-user")
+    def test_signup_flow_creates_sqlite_user_before_loading_history(self, _verify) -> None:
+        create_response = self.client.post(
+            "/users/me",
+            headers=self.auth_headers(),
+            json={"display_name": "New User"},
+        )
+        get_response = self.client.get(
+            "/users/me",
+            headers=self.auth_headers(),
+        )
+        history_response = self.client.get(
+            "/recoveries",
+            headers=self.auth_headers(),
+        )
+
+        self.assertEqual(create_response.status_code, 201)
+        self.assertEqual(get_response.status_code, 200)
+        self.assertEqual(get_response.json()["firebase_uid"], "new-firebase-user")
+        self.assertEqual(history_response.status_code, 200)
+        self.assertEqual(history_response.json(), [])
+        self.assertEqual(self.user_count(), 1)
+
     def test_post_me_without_authentication_returns_401_and_creates_nothing(self) -> None:
         response = self.client.post(
             "/users/me",

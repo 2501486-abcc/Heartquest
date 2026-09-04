@@ -99,7 +99,9 @@ function App() {
       case 'auth/network-request-failed':
         return '通信に失敗しました。インターネット接続を確認して、もう一度お試しください。'
       default:
-        return 'アカウントを作成できませんでした。入力内容を確認して、もう一度お試しください。'
+        return code
+          ? 'アカウントを作成できませんでした。入力内容を確認して、もう一度お試しください。'
+          : 'Firebaseアカウントは作成されましたが、HeartQuestのユーザー登録を完了できませんでした。バックエンドを確認して、ページを再読み込みしてください。'
     }
   }
 
@@ -118,9 +120,23 @@ function App() {
     setIsLoading(true)
     setError('')
     try {
-      await heartQuestService.register(email, password)
+      const authenticatedUser = await heartQuestService.register(email, password)
+      setUser(authenticatedUser)
+      setScreen('home')
+
+      try {
+        const [history, analyticsData] = await Promise.all([
+          heartQuestService.getRecoveries(),
+          heartQuestService.getAnalytics(),
+        ])
+        setRecoveries(history)
+        setAnalytics(analyticsData)
+      } catch {
+        setError('アカウントは作成されましたが、データを読み込めませんでした。ページを再読み込みしてください。')
+      }
     } catch (registrationError) {
       setError(firebaseRegistrationErrorMessage(registrationError))
+    } finally {
       setIsLoading(false)
     }
   }
