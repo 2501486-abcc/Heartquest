@@ -1483,6 +1483,22 @@ button {
   padding: 0;
 }
 
+.bookmark-button:disabled {
+  cursor: wait;
+  opacity: 0.55;
+}
+
+.bookmark-notice {
+  background: #e4f1e8;
+  border: 1px solid #bfd8c7;
+  border-radius: 14px;
+  color: var(--forest);
+  font-size: 0.82rem;
+  font-weight: 700;
+  margin: 0 0 18px;
+  padding: 12px 15px;
+}
+
 .bookmark-button.is-bookmarked {
   color: #d59d40;
 }
