@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import './App.css'
 import { AppShell } from './components/AppShell'
 import { defaultAnalysis, mockAnalytics } from './data/mockData'
@@ -31,26 +31,60 @@ function App() {
   const [analysis, setAnalysis] = useState<AiAnalysis>(defaultAnalysis)
   const [analytics, setAnalytics] = useState<AnalyticsData>(mockAnalytics)
   const [isLoading, setIsLoading] = useState(false)
+  const [isAuthChecking, setIsAuthChecking] = useState(true)
   const [isAiLoading, setIsAiLoading] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState('')
 
-  const handleLogin = async (email: string) => {
+  useEffect(() => {
+    const unsubscribe = heartQuestService.observeAuthState(async (authenticatedUser, authError) => {
+      if (authError) {
+        setUser(null)
+        setScreen('login')
+        setError('認証情報を確認できませんでした。もう一度ログインしてください。')
+        setIsAuthChecking(false)
+        setIsLoading(false)
+        return
+      }
+
+      if (!authenticatedUser) {
+        setUser(null)
+        setScreen('login')
+        setRecoveries([])
+        setSelectedMethod(null)
+        setIsAuthChecking(false)
+        setIsLoading(false)
+        return
+      }
+
+      setError('')
+      try {
+        const [history, analyticsData] = await Promise.all([
+          heartQuestService.getRecoveries(),
+          heartQuestService.getAnalytics(),
+        ])
+        setUser(authenticatedUser)
+        setRecoveries(history)
+        setAnalytics(analyticsData)
+        setScreen('home')
+      } catch {
+        setError('HeartQuestのデータを読み込めませんでした。もう一度お試しください。')
+      } finally {
+        setIsAuthChecking(false)
+        setIsLoading(false)
+      }
+    })
+
+    return unsubscribe
+  }, [])
+
+  const handleLogin = async (email: string, password: string) => {
     setIsLoading(true)
     setError('')
     try {
-      const [loggedInUser, history, analyticsData] = await Promise.all([
-        heartQuestService.login(email),
-        heartQuestService.getRecoveries(),
-        heartQuestService.getAnalytics(),
-      ])
-      setUser(loggedInUser)
-      setRecoveries(history)
-      setAnalytics(analyticsData)
-      setScreen('home')
+      await heartQuestService.login(email, password)
     } catch {
-      setError('デモの準備に失敗しました。もう一度お試しください。')
-    } finally {
+      setError('メールアドレスまたはパスワードを確認してください。')
       setIsLoading(false)
     }
   }
@@ -107,17 +141,20 @@ function App() {
     )
   }
 
-  const logout = () => {
-    setUser(null)
-    setScreen('login')
-    setSelectedMethod(null)
+  const logout = async () => {
+    setError('')
+    try {
+      await heartQuestService.logout()
+    } catch {
+      setError('ログアウトに失敗しました。もう一度お試しください。')
+    }
   }
 
-  if (!user || screen === 'login') {
+  if (isAuthChecking || !user || screen === 'login') {
     return (
       <>
         {error ? <div className="status-banner">{error}</div> : null}
-        <LoginPage isLoading={isLoading} onLogin={handleLogin} />
+        <LoginPage isLoading={isLoading || isAuthChecking} onLogin={handleLogin} />
       </>
     )
   }
@@ -197,7 +234,7 @@ function App() {
   return (
     <AppShell
       activeScreen={screen}
-      onLogout={logout}
+      onLogout={() => void logout()}
       onNavigate={setScreen}
       user={user}
     >

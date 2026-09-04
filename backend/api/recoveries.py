@@ -1,10 +1,11 @@
 from datetime import datetime
 from typing import Annotated
 
-from fastapi import APIRouter, HTTPException, Query, Request, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from pydantic import BaseModel, Field, StringConstraints
 
 from database import get_connection
+from services.firebase import get_current_firebase_uid
 
 
 router = APIRouter(prefix="/recoveries", tags=["recoveries"])
@@ -12,7 +13,6 @@ RequiredText = Annotated[str, StringConstraints(strip_whitespace=True, min_lengt
 
 
 class RecoveryCreate(BaseModel):
-    user_id: int = Field(gt=0)
     activity: RequiredText
     category: RequiredText
     before_mood: int | None = Field(default=None, ge=1, le=10)
@@ -28,6 +28,7 @@ class RecoveryCreate(BaseModel):
 
 class RecoveryResponse(RecoveryCreate):
     id: int
+    user_id: int
     created_at: datetime
     updated_at: datetime
 
@@ -42,29 +43,39 @@ def _database_path(request: Request):
     return request.app.state.database_path
 
 
-def _user_exists(database_path, user_id: int) -> bool:
+def _current_user_id(database_path, firebase_uid: str) -> int:
     with get_connection(database_path) as connection:
         row = connection.execute(
-            "SELECT 1 FROM users WHERE id = ?",
-            (user_id,),
+            "SELECT id FROM users WHERE firebase_uid = ?",
+            (firebase_uid,),
         ).fetchone()
-    return row is not None
+
+    if row is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found",
+        )
+
+    return row["id"]
 
 
 @router.post("", response_model=RecoveryResponse, status_code=status.HTTP_201_CREATED)
-def create_recovery(payload: RecoveryCreate, request: Request):
+def create_recovery(
+    payload: RecoveryCreate,
+    request: Request,
+    firebase_uid: str = Depends(get_current_firebase_uid),
+):
     database_path = _database_path(request)
-    if not _user_exists(database_path, payload.user_id):
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
-
+    user_id = _current_user_id(database_path, firebase_uid)
     recovery_data = payload.model_dump()
-    columns = ", ".join(recovery_data)
-    placeholders = ", ".join("?" for _ in recovery_data)
+
+    columns = ", ".join(("user_id", *recovery_data.keys()))
+    placeholders = ", ".join("?" for _ in range(len(recovery_data) + 1))
 
     with get_connection(database_path) as connection:
         cursor = connection.execute(
             f"INSERT INTO recoveries ({columns}) VALUES ({placeholders})",
-            tuple(recovery_data.values()),
+            (user_id, *recovery_data.values()),
         )
         row = connection.execute(
             "SELECT * FROM recoveries WHERE id = ?",
@@ -79,14 +90,16 @@ def update_recovery(
     recovery_id: Annotated[int, Field(gt=0)],
     payload: RecoveryUpdate,
     request: Request,
+    firebase_uid: str = Depends(get_current_firebase_uid),
 ):
     database_path = _database_path(request)
+    user_id = _current_user_id(database_path, firebase_uid)
     recovery_data = payload.model_dump(exclude_unset=True)
 
     with get_connection(database_path) as connection:
         row = connection.execute(
-            "SELECT * FROM recoveries WHERE id = ?",
-            (recovery_id,),
+            "SELECT * FROM recoveries WHERE id = ? AND user_id = ?",
+            (recovery_id, user_id),
         ).fetchone()
         if row is None:
             raise HTTPException(
@@ -100,14 +113,14 @@ def update_recovery(
                 f"""
                 UPDATE recoveries
                 SET {assignments}, updated_at = CURRENT_TIMESTAMP
-                WHERE id = ?
+                WHERE id = ? AND user_id = ?
                 """,
-                (*recovery_data.values(), recovery_id),
+                (*recovery_data.values(), recovery_id, user_id),
             )
 
         updated_row = connection.execute(
-            "SELECT * FROM recoveries WHERE id = ?",
-            (recovery_id,),
+            "SELECT * FROM recoveries WHERE id = ? AND user_id = ?",
+            (recovery_id, user_id),
         ).fetchone()
 
     return dict(updated_row)
@@ -116,11 +129,10 @@ def update_recovery(
 @router.get("", response_model=list[RecoveryResponse])
 def list_recoveries(
     request: Request,
-    user_id: Annotated[int, Query(gt=0)],
+    firebase_uid: str = Depends(get_current_firebase_uid),
 ):
     database_path = _database_path(request)
-    if not _user_exists(database_path, user_id):
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+    user_id = _current_user_id(database_path, firebase_uid)
 
     with get_connection(database_path) as connection:
         rows = connection.execute(

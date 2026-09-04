@@ -2,11 +2,12 @@ import { useState } from 'react'
 
 type LoginPageProps = {
   isLoading: boolean
-  onLogin: (email: string) => Promise<void>
+  onLogin: (email: string, password: string) => Promise<void>
 }
 
 export function LoginPage({ isLoading, onLogin }: LoginPageProps) {
-  const [email, setEmail] = useState('demo@heartquest.local')
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
 
   return (
     <main className="login-page">
@@ -40,12 +41,12 @@ export function LoginPage({ isLoading, onLogin }: LoginPageProps) {
         <div className="login-card">
           <p className="eyebrow">WELCOME BACK</p>
           <h2>おかえりなさい</h2>
-          <p className="muted-text">デモ用アカウントですぐに体験できます。</p>
+          <p className="muted-text">Firebase AuthenticationでHeartQuestにログインします。</p>
 
           <form
             onSubmit={(event) => {
               event.preventDefault()
-              void onLogin(email)
+              void onLogin(email, password)
             }}
           >
             <label className="field-label" htmlFor="email">
@@ -64,21 +65,22 @@ export function LoginPage({ isLoading, onLogin }: LoginPageProps) {
             </label>
             <input
               autoComplete="current-password"
-              defaultValue="heartquest"
               id="password"
               minLength={6}
+              onChange={(event) => setPassword(event.target.value)}
               required
               type="password"
+              value={password}
             />
             <button className="primary-button full-width" disabled={isLoading} type="submit">
-              {isLoading ? '準備しています…' : 'デモをはじめる'}
+              {isLoading ? '認証を確認しています…' : 'ログイン'}
               <span aria-hidden="true">→</span>
             </button>
           </form>
 
           <p className="demo-notice">
             <span aria-hidden="true">●</span>
-            ローカルデモのため、入力内容は外部に送信されません
+            認証情報はFirebase Authenticationで確認されます
           </p>
         </div>
       </section>
