@@ -1,4 +1,5 @@
 import {
+  createUserWithEmailAndPassword,
   onAuthStateChanged,
   signInWithEmailAndPassword,
   signOut,
@@ -89,6 +90,10 @@ async function ensureHeartQuestUser(firebaseUser: FirebaseUser): Promise<User> {
 export const heartQuestService = {
   async login(email: string, password: string): Promise<void> {
     await signInWithEmailAndPassword(auth, email, password)
+  },
+
+  async register(email: string, password: string): Promise<void> {
+    await createUserWithEmailAndPassword(auth, email, password)
   },
 
   observeAuthState(
