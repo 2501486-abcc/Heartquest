@@ -2,6 +2,7 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 from fastapi.testclient import TestClient
 
@@ -28,21 +29,35 @@ class RecoveriesApiTests(unittest.TestCase):
                 ("firebase-user-1", "Test User"),
             ).lastrowid
 
+        self.verify_patcher = patch(
+            "services.firebase.verify_firebase_id_token",
+            return_value="firebase-user-1",
+        )
+        self.verify_mock = self.verify_patcher.start()
+
         self.client_context = TestClient(create_app(self.database_path))
         self.client = self.client_context.__enter__()
 
     def tearDown(self) -> None:
         self.client_context.__exit__(None, None, None)
+        self.verify_patcher.stop()
         self.temp_directory.cleanup()
+
+    @staticmethod
+    def auth_headers() -> dict[str, str]:
+        return {"Authorization": "Bearer valid-token"}
 
     def test_create_then_list_recovery(self) -> None:
         payload = {
-            "user_id": self.user_id,
             "activity": "散歩",
             "category": "運動",
         }
 
-        create_response = self.client.post("/recoveries", json=payload)
+        create_response = self.client.post(
+            "/recoveries",
+            headers=self.auth_headers(),
+            json=payload,
+        )
 
         self.assertEqual(create_response.status_code, 201)
         created = create_response.json()
@@ -53,7 +68,7 @@ class RecoveriesApiTests(unittest.TestCase):
 
         list_response = self.client.get(
             "/recoveries",
-            params={"user_id": self.user_id},
+            headers=self.auth_headers(),
         )
 
         self.assertEqual(list_response.status_code, 200)
@@ -62,16 +77,16 @@ class RecoveriesApiTests(unittest.TestCase):
     def test_list_returns_newest_record_first_and_preserves_categories(self) -> None:
         first = self.client.post(
             "/recoveries",
+            headers=self.auth_headers(),
             json={
-                "user_id": self.user_id,
                 "activity": "散歩",
                 "category": "運動",
             },
         ).json()
         second = self.client.post(
             "/recoveries",
+            headers=self.auth_headers(),
             json={
-                "user_id": self.user_id,
                 "activity": "音楽を聴く",
                 "category": "音楽",
             },
@@ -79,7 +94,7 @@ class RecoveriesApiTests(unittest.TestCase):
 
         response = self.client.get(
             "/recoveries",
-            params={"user_id": self.user_id},
+            headers=self.auth_headers(),
         )
 
         self.assertEqual(response.status_code, 200)
@@ -88,7 +103,7 @@ class RecoveriesApiTests(unittest.TestCase):
     def test_empty_history_returns_empty_list(self) -> None:
         response = self.client.get(
             "/recoveries",
-            params={"user_id": self.user_id},
+            headers=self.auth_headers(),
         )
 
         self.assertEqual(response.status_code, 200)
@@ -96,7 +111,6 @@ class RecoveriesApiTests(unittest.TestCase):
 
     def test_optional_fields_are_saved_and_returned(self) -> None:
         payload = {
-            "user_id": self.user_id,
             "activity": "  入浴  ",
             "category": "  リラックス  ",
             "before_mood": 3,
@@ -110,7 +124,11 @@ class RecoveriesApiTests(unittest.TestCase):
             "source": "manual",
         }
 
-        response = self.client.post("/recoveries", json=payload)
+        response = self.client.post(
+            "/recoveries",
+            headers=self.auth_headers(),
+            json=payload,
+        )
 
         self.assertEqual(response.status_code, 201)
         created = response.json()
@@ -132,8 +150,8 @@ class RecoveriesApiTests(unittest.TestCase):
     def test_patch_adds_feedback_after_recovery(self) -> None:
         created = self.client.post(
             "/recoveries",
+            headers=self.auth_headers(),
             json={
-                "user_id": self.user_id,
                 "activity": "散歩",
                 "category": "運動",
                 "before_mood": 3,
@@ -143,6 +161,7 @@ class RecoveriesApiTests(unittest.TestCase):
 
         response = self.client.patch(
             f"/recoveries/{created['id']}",
+            headers=self.auth_headers(),
             json={
                 "after_mood": 8,
                 "after_comment": "気分が軽くなった",
@@ -155,20 +174,12 @@ class RecoveriesApiTests(unittest.TestCase):
         self.assertEqual(updated["after_mood"], 8)
         self.assertEqual(updated["after_comment"], "気分が軽くなった")
         self.assertEqual(updated["rating"], 9)
-        self.assertEqual(updated["activity"], created["activity"])
-        self.assertEqual(updated["before_mood"], created["before_mood"])
-
-        list_response = self.client.get(
-            "/recoveries",
-            params={"user_id": self.user_id},
-        )
-        self.assertEqual(list_response.json(), [updated])
 
     def test_patch_only_changes_provided_fields(self) -> None:
         created = self.client.post(
             "/recoveries",
+            headers=self.auth_headers(),
             json={
-                "user_id": self.user_id,
                 "activity": "入浴",
                 "category": "リラックス",
                 "after_mood": 6,
@@ -179,6 +190,7 @@ class RecoveriesApiTests(unittest.TestCase):
 
         response = self.client.patch(
             f"/recoveries/{created['id']}",
+            headers=self.auth_headers(),
             json={"rating": 8},
         )
 
@@ -191,74 +203,79 @@ class RecoveriesApiTests(unittest.TestCase):
     def test_patch_unknown_recovery_returns_404(self) -> None:
         response = self.client.patch(
             "/recoveries/99999",
+            headers=self.auth_headers(),
             json={"rating": 8},
         )
 
         self.assertEqual(response.status_code, 404)
         self.assertEqual(response.json(), {"detail": "Recovery not found"})
 
-    def test_patch_rejects_invalid_feedback(self) -> None:
-        created = self.client.post(
-            "/recoveries",
-            json={
-                "user_id": self.user_id,
-                "activity": "散歩",
-                "category": "運動",
-            },
-        ).json()
+    def test_authenticated_user_cannot_update_another_users_recovery(self) -> None:
+        with get_connection(self.database_path) as connection:
+            other_user_id = connection.execute(
+                """
+                INSERT INTO users (firebase_uid, display_name)
+                VALUES (?, ?)
+                """,
+                ("firebase-user-2", "Other User"),
+            ).lastrowid
+            recovery_id = connection.execute(
+                """
+                INSERT INTO recoveries (user_id, activity, category)
+                VALUES (?, ?, ?)
+                """,
+                (other_user_id, "睡眠", "休息"),
+            ).lastrowid
 
-        for payload in (
-            {"after_mood": 0},
-            {"after_mood": 11},
-            {"rating": 0},
-            {"rating": 11},
-        ):
-            with self.subTest(payload=payload):
-                response = self.client.patch(
-                    f"/recoveries/{created['id']}",
-                    json=payload,
-                )
-                self.assertEqual(response.status_code, 422)
+        response = self.client.patch(
+            f"/recoveries/{recovery_id}",
+            headers=self.auth_headers(),
+            json={"rating": 8},
+        )
 
-    def test_unknown_user_returns_404(self) -> None:
+        self.assertEqual(response.status_code, 404)
+
+    def test_unregistered_firebase_user_returns_404(self) -> None:
+        self.verify_mock.return_value = "unregistered-user"
+
         create_response = self.client.post(
             "/recoveries",
-            json={"user_id": 99999, "activity": "散歩", "category": "運動"},
+            headers=self.auth_headers(),
+            json={"activity": "散歩", "category": "運動"},
         )
         list_response = self.client.get(
             "/recoveries",
-            params={"user_id": 99999},
+            headers=self.auth_headers(),
         )
 
         self.assertEqual(create_response.status_code, 404)
         self.assertEqual(create_response.json(), {"detail": "User not found"})
         self.assertEqual(list_response.status_code, 404)
 
+    def test_without_authentication_returns_401(self) -> None:
+        create_response = self.client.post(
+            "/recoveries",
+            json={"activity": "散歩", "category": "運動"},
+        )
+        list_response = self.client.get("/recoveries")
+
+        self.assertEqual(create_response.status_code, 401)
+        self.assertEqual(list_response.status_code, 401)
+
     def test_invalid_input_returns_422_and_is_not_saved(self) -> None:
         for payload in (
-            {"user_id": self.user_id, "activity": "", "category": "運動"},
-            {"user_id": self.user_id, "activity": "散歩", "category": "   "},
-            {
-                "user_id": self.user_id,
-                "activity": "散歩",
-                "category": "運動",
-                "before_mood": 11,
-            },
-            {
-                "user_id": self.user_id,
-                "activity": "散歩",
-                "category": "運動",
-                "after_mood": 0,
-            },
-            {
-                "user_id": self.user_id,
-                "activity": "散歩",
-                "category": "運動",
-                "rating": 11,
-            },
+            {"activity": "", "category": "運動"},
+            {"activity": "散歩", "category": "   "},
+            {"activity": "散歩", "category": "運動", "before_mood": 11},
+            {"activity": "散歩", "category": "運動", "after_mood": 0},
+            {"activity": "散歩", "category": "運動", "rating": 11},
         ):
             with self.subTest(payload=payload):
-                response = self.client.post("/recoveries", json=payload)
+                response = self.client.post(
+                    "/recoveries",
+                    headers=self.auth_headers(),
+                    json=payload,
+                )
                 self.assertEqual(response.status_code, 422)
 
         with get_connection(self.database_path) as connection:

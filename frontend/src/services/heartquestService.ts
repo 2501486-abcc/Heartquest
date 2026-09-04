@@ -1,9 +1,16 @@
 import {
+  onAuthStateChanged,
+  signInWithEmailAndPassword,
+  signOut,
+  type User as FirebaseUser,
+} from 'firebase/auth'
+import { auth } from '../firebase'
+import {
   defaultAnalysis,
   mockAiSuggestions,
   mockAnalytics,
-  mockRecoveries,
 } from '../data/mockData'
+import { authenticatedFetch, responseError } from './api'
 import type {
   AiAnalysis,
   AnalyticsData,
@@ -12,8 +19,23 @@ import type {
   User,
 } from '../types'
 
-const simulateNetwork = (milliseconds = 350) =>
-  new Promise((resolve) => window.setTimeout(resolve, milliseconds))
+type BackendUser = {
+  id: number
+  firebase_uid: string
+  display_name: string
+}
+
+type BackendRecovery = {
+  id: number
+  user_id: number
+  activity: string
+  category: string
+  memo: string | null
+  rating: number | null
+  ai_score: number | null
+  ai_comment: string | null
+  created_at: string
+}
 
 type SaveRecoveryInput = {
   method: RecoveryMethod
@@ -22,53 +44,112 @@ type SaveRecoveryInput = {
   rating: number
 }
 
+const toFrontendUser = (backendUser: BackendUser, firebaseUser: FirebaseUser): User => ({
+  id: String(backendUser.id),
+  displayName: backendUser.display_name,
+  email: firebaseUser.email ?? '',
+})
+
+const toRecoveryEntry = (recovery: BackendRecovery): RecoveryEntry => ({
+  id: String(recovery.id),
+  activity: recovery.activity,
+  memo: recovery.memo ?? '',
+  rating: recovery.rating ?? 0,
+  aiScore: recovery.ai_score ?? recovery.rating ?? 0,
+  aiComment: recovery.ai_comment ?? '',
+  createdAt: recovery.created_at,
+})
+
+const defaultDisplayName = (firebaseUser: FirebaseUser) => {
+  const displayName = firebaseUser.displayName?.trim()
+  if (displayName) return displayName.slice(0, 30)
+
+  const emailName = firebaseUser.email?.split('@')[0]?.trim()
+  return (emailName || 'HeartQuest User').slice(0, 30)
+}
+
+async function ensureHeartQuestUser(firebaseUser: FirebaseUser): Promise<User> {
+  let response = await authenticatedFetch('/users/me')
+
+  if (response.status === 404) {
+    response = await authenticatedFetch('/users/me', {
+      method: 'POST',
+      body: JSON.stringify({ display_name: defaultDisplayName(firebaseUser) }),
+    })
+  }
+
+  if (!response.ok) {
+    throw new Error(await responseError(response))
+  }
+
+  const backendUser = (await response.json()) as BackendUser
+  return toFrontendUser(backendUser, firebaseUser)
+}
+
 export const heartQuestService = {
-  async login(email: string): Promise<User> {
-    // TODO(API): Firebase Authentication の signInWithEmailAndPassword へ置き換える。
-    await simulateNetwork()
-    return {
-      id: 'demo-user',
-      displayName: 'はるか',
-      email: email || 'demo@heartquest.local',
-    }
+  async login(email: string, password: string): Promise<void> {
+    await signInWithEmailAndPassword(auth, email, password)
+  },
+
+  observeAuthState(
+    onChange: (user: User | null, error?: Error) => void,
+  ): () => void {
+    return onAuthStateChanged(auth, async (firebaseUser) => {
+      if (!firebaseUser) {
+        onChange(null)
+        return
+      }
+
+      try {
+        onChange(await ensureHeartQuestUser(firebaseUser))
+      } catch (error) {
+        onChange(null, error instanceof Error ? error : new Error('Authentication failed'))
+      }
+    })
+  },
+
+  async logout(): Promise<void> {
+    await signOut(auth)
   },
 
   async getRecoveries(): Promise<RecoveryEntry[]> {
-    // TODO(API): GET /recoveries（Firebase ID Token付き）へ置き換える。
-    await simulateNetwork(200)
-    return [...mockRecoveries]
+    const response = await authenticatedFetch('/recoveries')
+    if (!response.ok) {
+      throw new Error(await responseError(response))
+    }
+
+    const recoveries = (await response.json()) as BackendRecovery[]
+    return recoveries.map(toRecoveryEntry)
   },
 
   async getRecommendations(): Promise<RecoveryMethod[]> {
-    // TODO(API): POST /ai/recommend へ、過去の履歴と回復前の状態を送る。
-    await simulateNetwork(700)
     return [...mockAiSuggestions]
   },
 
   async saveRecovery(input: SaveRecoveryInput): Promise<RecoveryEntry> {
-    // TODO(API): POST /recoveries 後、PUT /recoveries/{id}/rating へ分けて送信する。
-    await simulateNetwork(450)
-    const aiScore = Math.min(10, Math.max(1, input.rating + 0.4))
-    return {
-      id: 'recovery-' + Date.now(),
-      activity: input.method.title,
-      memo: input.memo,
-      rating: input.rating,
-      aiScore,
-      aiComment:
-        input.rating >= 8
-          ? '今回の方法は、今の状態に合った高い回復効果が見られました。'
-          : '少し回復できています。時間帯や実施時間を変えて比べてみましょう。',
-      createdAt: new Date().toISOString(),
+    const response = await authenticatedFetch('/recoveries', {
+      method: 'POST',
+      body: JSON.stringify({
+        activity: input.method.title,
+        category: input.method.category,
+        before_mood: input.moodBefore,
+        memo: input.memo,
+        rating: input.rating,
+        source: input.method.source,
+      }),
+    })
+
+    if (!response.ok) {
+      throw new Error(await responseError(response))
     }
+
+    return toRecoveryEntry((await response.json()) as BackendRecovery)
   },
 
   async analyzeRecovery(
     entry: RecoveryEntry,
     moodBefore: number,
   ): Promise<AiAnalysis> {
-    // TODO(API): POST /ai/analyze へ回復前状態・方法・感想・10段階評価を送る。
-    await simulateNetwork(650)
     return {
       ...defaultAnalysis,
       score: entry.aiScore,
@@ -86,8 +167,6 @@ export const heartQuestService = {
   },
 
   async getAnalytics(): Promise<AnalyticsData> {
-    // TODO(API): GET /analytics/ranking と GET /analytics/monthly に置き換える。
-    await simulateNetwork(250)
     return mockAnalytics
   },
 }
