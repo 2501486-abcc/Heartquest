@@ -78,6 +78,31 @@ function App() {
     return unsubscribe
   }, [])
 
+  const firebaseRegistrationErrorMessage = (registrationError: unknown) => {
+    const code =
+      typeof registrationError === 'object' &&
+      registrationError !== null &&
+      'code' in registrationError &&
+      typeof registrationError.code === 'string'
+        ? registrationError.code
+        : ''
+
+    switch (code) {
+      case 'auth/email-already-in-use':
+        return 'このメールアドレスはすでに登録されています。ログインをお試しください。'
+      case 'auth/invalid-email':
+        return 'メールアドレスの形式を確認してください。'
+      case 'auth/weak-password':
+        return 'パスワードは6文字以上で入力してください。'
+      case 'auth/operation-not-allowed':
+        return '現在、新規登録を利用できません。管理者にお問い合わせください。'
+      case 'auth/network-request-failed':
+        return '通信に失敗しました。インターネット接続を確認して、もう一度お試しください。'
+      default:
+        return 'アカウントを作成できませんでした。入力内容を確認して、もう一度お試しください。'
+    }
+  }
+
   const handleLogin = async (email: string, password: string) => {
     setIsLoading(true)
     setError('')
@@ -85,6 +110,17 @@ function App() {
       await heartQuestService.login(email, password)
     } catch {
       setError('メールアドレスまたはパスワードを確認してください。')
+      setIsLoading(false)
+    }
+  }
+
+  const handleRegister = async (email: string, password: string) => {
+    setIsLoading(true)
+    setError('')
+    try {
+      await heartQuestService.register(email, password)
+    } catch (registrationError) {
+      setError(firebaseRegistrationErrorMessage(registrationError))
       setIsLoading(false)
     }
   }
@@ -154,7 +190,11 @@ function App() {
     return (
       <>
         {error ? <div className="status-banner">{error}</div> : null}
-        <LoginPage isLoading={isLoading || isAuthChecking} onLogin={handleLogin} />
+        <LoginPage
+          isLoading={isLoading || isAuthChecking}
+          onLogin={handleLogin}
+          onRegister={handleRegister}
+        />
       </>
     )
   }
