@@ -26,6 +26,15 @@ export type RecoveryMethod = {
   reason?: string
 }
 
+export type Bookmark = {
+  id: string
+  title: string
+  description: string
+  category: string
+  source: string
+  createdAt: string
+}
+
 export type RecoveryEntry = {
   id: string
   activity: string

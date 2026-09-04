@@ -4,6 +4,8 @@ import type { RecoveryMethod } from '../types'
 
 type AiSuggestionsPageProps = {
   bookmarkedIds: string[]
+  bookmarkNotice: string
+  bookmarkingIds: string[]
   isLoading: boolean
   methods: RecoveryMethod[]
   onBack: () => void
@@ -14,6 +16,8 @@ type AiSuggestionsPageProps = {
 
 export function AiSuggestionsPage({
   bookmarkedIds,
+  bookmarkNotice,
+  bookmarkingIds,
   isLoading,
   methods,
   onBack,
@@ -38,6 +42,12 @@ export function AiSuggestionsPage({
         </p>
       </div>
 
+      {bookmarkNotice ? (
+        <div className="bookmark-notice" role="status">
+          {bookmarkNotice}
+        </div>
+      ) : null}
+
       {isLoading ? (
         <div className="suggestion-loading" aria-live="polite">
           <div className="loading-orbit"><span>✦</span></div>
@@ -50,6 +60,7 @@ export function AiSuggestionsPage({
             {methods.map((method) => (
               <RecoveryMethodCard
                 bookmarked={bookmarkedIds.includes(method.id)}
+                isBookmarking={bookmarkingIds.includes(method.id)}
                 key={method.id}
                 method={method}
                 onBookmark={onBookmark}

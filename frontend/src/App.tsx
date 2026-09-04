@@ -14,11 +14,18 @@ import { heartQuestService } from './services/heartquestService'
 import type {
   AiAnalysis,
   AnalyticsData,
+  Bookmark,
   RecoveryEntry,
   RecoveryMethod,
   Screen,
   User,
 } from './types'
+
+const bookmarkMatchesMethod = (bookmark: Bookmark, method: RecoveryMethod) =>
+  bookmark.title === method.title &&
+  bookmark.description === method.description &&
+  bookmark.category === method.category &&
+  bookmark.source === method.source
 
 function App() {
   const [screen, setScreen] = useState<Screen>('login')
@@ -26,7 +33,9 @@ function App() {
   const [recoveries, setRecoveries] = useState<RecoveryEntry[]>([])
   const [selectedMethod, setSelectedMethod] = useState<RecoveryMethod | null>(null)
   const [suggestions, setSuggestions] = useState<RecoveryMethod[]>([])
-  const [bookmarkedIds, setBookmarkedIds] = useState<string[]>([])
+  const [bookmarks, setBookmarks] = useState<Bookmark[]>([])
+  const [bookmarkingIds, setBookmarkingIds] = useState<string[]>([])
+  const [bookmarkNotice, setBookmarkNotice] = useState('')
   const [moodBefore, setMoodBefore] = useState(3)
   const [analysis, setAnalysis] = useState<AiAnalysis>(defaultAnalysis)
   const [analytics, setAnalytics] = useState<AnalyticsData>({
@@ -55,6 +64,9 @@ function App() {
         setUser(null)
         setScreen('login')
         setRecoveries([])
+        setBookmarks([])
+        setBookmarkingIds([])
+        setBookmarkNotice('')
         setSelectedMethod(null)
         setIsAuthChecking(false)
         setIsLoading(false)
@@ -63,13 +75,15 @@ function App() {
 
       setError('')
       try {
-        const [history, analyticsData] = await Promise.all([
+        const [history, analyticsData, savedBookmarks] = await Promise.all([
           heartQuestService.getRecoveries(),
           heartQuestService.getAnalytics(),
+          heartQuestService.getBookmarks(),
         ])
         setUser(authenticatedUser)
         setRecoveries(history)
         setAnalytics(analyticsData)
+        setBookmarks(savedBookmarks)
         setScreen('home')
       } catch {
         setError('HeartQuestのデータを読み込めませんでした。もう一度お試しください。')
@@ -129,12 +143,14 @@ function App() {
       setScreen('home')
 
       try {
-        const [history, analyticsData] = await Promise.all([
+        const [history, analyticsData, savedBookmarks] = await Promise.all([
           heartQuestService.getRecoveries(),
           heartQuestService.getAnalytics(),
+          heartQuestService.getBookmarks(),
         ])
         setRecoveries(history)
         setAnalytics(analyticsData)
+        setBookmarks(savedBookmarks)
       } catch {
         setError('アカウントは作成されましたが、データを読み込めませんでした。ページを再読み込みしてください。')
       }
@@ -149,6 +165,7 @@ function App() {
     setScreen('ai-suggestions')
     setIsAiLoading(true)
     setError('')
+    setBookmarkNotice('')
     try {
       setSuggestions(await heartQuestService.getRecommendations())
     } catch {
@@ -194,13 +211,38 @@ function App() {
     }
   }
 
-  const toggleBookmark = (method: RecoveryMethod) => {
-    // TODO(API): POST /bookmarks または DELETE /bookmarks/{id} に置き換える。
-    setBookmarkedIds((current) =>
-      current.includes(method.id)
-        ? current.filter((id) => id !== method.id)
-        : [...current, method.id],
+  const toggleBookmark = async (method: RecoveryMethod) => {
+    if (bookmarkingIds.includes(method.id)) return
+
+    setBookmarkingIds((current) => [...current, method.id])
+    setBookmarkNotice('')
+    setError('')
+
+    const existingBookmark = bookmarks.find((bookmark) =>
+      bookmarkMatchesMethod(bookmark, method),
     )
+
+    try {
+      if (existingBookmark) {
+        await heartQuestService.deleteBookmark(existingBookmark.id)
+        setBookmarks((current) =>
+          current.filter((bookmark) => bookmark.id !== existingBookmark.id),
+        )
+        setBookmarkNotice(`「${method.title}」の保存を解除しました。`)
+      } else {
+        const created = await heartQuestService.createBookmark(method)
+        setBookmarks((current) => [created, ...current])
+        setBookmarkNotice(`「${method.title}」を保存しました。`)
+      }
+    } catch {
+      setError(
+        existingBookmark
+          ? '保存の解除に失敗しました。もう一度お試しください。'
+          : '回復方法を保存できませんでした。もう一度お試しください。',
+      )
+    } finally {
+      setBookmarkingIds((current) => current.filter((id) => id !== method.id))
+    }
   }
 
   const logout = async () => {
@@ -250,9 +292,16 @@ function App() {
       )
       break
     case 'ai-suggestions':
+      const bookmarkedIds = suggestions
+        .filter((method) =>
+          bookmarks.some((bookmark) => bookmarkMatchesMethod(bookmark, method)),
+        )
+        .map((method) => method.id)
       content = (
         <AiSuggestionsPage
           bookmarkedIds={bookmarkedIds}
+          bookmarkNotice={bookmarkNotice}
+          bookmarkingIds={bookmarkingIds}
           isLoading={isAiLoading}
           methods={suggestions}
           onBack={() => setScreen('methods')}

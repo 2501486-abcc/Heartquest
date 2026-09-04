@@ -14,6 +14,7 @@ import { authenticatedFetch, responseError } from './api'
 import type {
   AiAnalysis,
   AnalyticsData,
+  Bookmark,
   RecoveryEntry,
   RecoveryMethod,
   User,
@@ -34,6 +35,16 @@ type BackendRecovery = {
   rating: number | null
   ai_score: number | null
   ai_comment: string | null
+  created_at: string
+}
+
+type BackendBookmark = {
+  id: number
+  user_id: number
+  title: string
+  description: string | null
+  category: string | null
+  source: string | null
   created_at: string
 }
 
@@ -85,6 +96,15 @@ const toRecoveryEntry = (recovery: BackendRecovery): RecoveryEntry => ({
   aiScore: recovery.ai_score ?? recovery.rating ?? 0,
   aiComment: recovery.ai_comment ?? '',
   createdAt: recovery.created_at,
+})
+
+const toBookmark = (bookmark: BackendBookmark): Bookmark => ({
+  id: String(bookmark.id),
+  title: bookmark.title,
+  description: bookmark.description ?? '',
+  category: bookmark.category ?? '',
+  source: bookmark.source ?? '',
+  createdAt: bookmark.created_at,
 })
 
 const defaultDisplayName = (firebaseUser: FirebaseUser) => {
@@ -152,6 +172,43 @@ export const heartQuestService = {
 
   async getRecommendations(): Promise<RecoveryMethod[]> {
     return [...mockAiSuggestions]
+  },
+
+  async getBookmarks(): Promise<Bookmark[]> {
+    const response = await authenticatedFetch('/bookmarks')
+    if (!response.ok) {
+      throw new Error(await responseError(response))
+    }
+
+    const bookmarks = (await response.json()) as BackendBookmark[]
+    return bookmarks.map(toBookmark)
+  },
+
+  async createBookmark(method: RecoveryMethod): Promise<Bookmark> {
+    const response = await authenticatedFetch('/bookmarks', {
+      method: 'POST',
+      body: JSON.stringify({
+        title: method.title,
+        description: method.description,
+        category: method.category,
+        source: method.source,
+      }),
+    })
+
+    if (!response.ok) {
+      throw new Error(await responseError(response))
+    }
+
+    return toBookmark((await response.json()) as BackendBookmark)
+  },
+
+  async deleteBookmark(bookmarkId: string): Promise<void> {
+    const response = await authenticatedFetch(`/bookmarks/${bookmarkId}`, {
+      method: 'DELETE',
+    })
+    if (!response.ok) {
+      throw new Error(await responseError(response))
+    }
   },
 
   async saveRecovery(input: SaveRecoveryInput): Promise<RecoveryEntry> {

@@ -2,6 +2,7 @@ import type { RecoveryMethod } from '../types'
 
 type RecoveryMethodCardProps = {
   bookmarked?: boolean
+  isBookmarking?: boolean
   method: RecoveryMethod
   onBookmark?: (method: RecoveryMethod) => void
   onSelect: (method: RecoveryMethod) => void
@@ -10,6 +11,7 @@ type RecoveryMethodCardProps = {
 
 export function RecoveryMethodCard({
   bookmarked = false,
+  isBookmarking = false,
   method,
   onBookmark,
   onSelect,
@@ -36,7 +38,9 @@ export function RecoveryMethodCard({
       {onBookmark ? (
         <button
           aria-label={bookmarked ? method.title + 'の保存を解除' : method.title + 'を保存'}
+          aria-busy={isBookmarking}
           className={'bookmark-button' + (bookmarked ? ' is-bookmarked' : '')}
+          disabled={isBookmarking}
           onClick={() => onBookmark(method)}
           type="button"
         >
