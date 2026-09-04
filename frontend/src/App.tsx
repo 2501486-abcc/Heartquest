@@ -118,7 +118,16 @@ function App() {
     setIsLoading(true)
     setError('')
     try {
-      await heartQuestService.register(email, password)
+      const authenticatedUser = await heartQuestService.register(email, password)
+      const [history, analyticsData] = await Promise.all([
+        heartQuestService.getRecoveries(),
+        heartQuestService.getAnalytics(),
+      ])
+      setUser(authenticatedUser)
+      setRecoveries(history)
+      setAnalytics(analyticsData)
+      setScreen('home')
+      setIsLoading(false)
     } catch (registrationError) {
       setError(firebaseRegistrationErrorMessage(registrationError))
       setIsLoading(false)

@@ -70,14 +70,10 @@ const defaultDisplayName = (firebaseUser: FirebaseUser) => {
 }
 
 async function ensureHeartQuestUser(firebaseUser: FirebaseUser): Promise<User> {
-  let response = await authenticatedFetch('/users/me')
-
-  if (response.status === 404) {
-    response = await authenticatedFetch('/users/me', {
-      method: 'POST',
-      body: JSON.stringify({ display_name: defaultDisplayName(firebaseUser) }),
-    })
-  }
+  const response = await authenticatedFetch('/users/me', {
+    method: 'POST',
+    body: JSON.stringify({ display_name: defaultDisplayName(firebaseUser) }),
+  })
 
   if (!response.ok) {
     throw new Error(await responseError(response))
@@ -92,8 +88,9 @@ export const heartQuestService = {
     await signInWithEmailAndPassword(auth, email, password)
   },
 
-  async register(email: string, password: string): Promise<void> {
-    await createUserWithEmailAndPassword(auth, email, password)
+  async register(email: string, password: string): Promise<User> {
+    const credential = await createUserWithEmailAndPassword(auth, email, password)
+    return ensureHeartQuestUser(credential.user)
   },
 
   observeAuthState(
