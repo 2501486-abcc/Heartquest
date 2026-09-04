@@ -7,6 +7,14 @@ type ChartsPageProps = {
 }
 
 export function ChartsPage({ analytics, onBack }: ChartsPageProps) {
+  const currentMonth = analytics.monthly[analytics.monthly.length - 1]
+  const previousMonth = analytics.monthly[analytics.monthly.length - 2]
+  const topRanking = analytics.ranking[0]
+  const topBreakdown = analytics.breakdown[0]
+  const scoreDifference = (currentMonth?.score ?? 0) - (previousMonth?.score ?? 0)
+  const comparisonText = previousMonth?.count
+    ? `先月比 ${scoreDifference >= 0 ? '+' : ''}${scoreDifference.toFixed(1)}`
+    : '先月の評価データなし'
   const donutGradient = analytics.breakdown
     .reduce(
       (result, item, index) => {
@@ -20,11 +28,14 @@ export function ChartsPage({ analytics, onBack }: ChartsPageProps) {
       [] as string[],
     )
     .join(', ')
+  const monthlyRange = analytics.monthly.length
+    ? `${analytics.monthly[0].label}から${currentMonth.label}までの平均回復スコア。`
+    : '月ごとの平均回復スコア。'
 
   return (
     <div className="page">
       <PageHeader
-        description="ダミーデータで、月ごとの変化と効果の高い方法を表示しています。"
+        description="これまでの記録から、月ごとの変化と効果の高い方法を表示しています。"
         eyebrow="RECOVERY ANALYTICS"
         onBack={onBack}
         title="あなたの回復傾向"
@@ -33,18 +44,20 @@ export function ChartsPage({ analytics, onBack }: ChartsPageProps) {
       <section className="chart-overview">
         <article className="metric-card">
           <span>今月の平均</span>
-          <strong>8.1</strong>
-          <small>先月比 +0.3</small>
+          <strong>{(currentMonth?.score ?? 0).toFixed(1)}</strong>
+          <small>{comparisonText}</small>
         </article>
         <article className="metric-card">
           <span>回復した回数</span>
-          <strong>12</strong>
-          <small>3日連続で記録中</small>
+          <strong>{currentMonth?.count ?? 0}</strong>
+          <small>今月の記録</small>
         </article>
         <article className="metric-card">
           <span>いちばん合う方法</span>
-          <strong className="metric-word">入浴</strong>
-          <small>平均 8.8 / 10</small>
+          <strong className="metric-word">{topRanking?.label ?? '未集計'}</strong>
+          <small>
+            {topRanking ? `平均 ${topRanking.score.toFixed(1)} / 10` : '評価データがありません'}
+          </small>
         </article>
       </section>
 
@@ -60,7 +73,7 @@ export function ChartsPage({ analytics, onBack }: ChartsPageProps) {
           <div
             className="bar-chart"
             aria-label={
-              '4月から9月までの平均回復スコア。' +
+              monthlyRange +
               analytics.monthly
                 .map((month) => `${month.label} ${month.score.toFixed(1)}`)
                 .join('、')
@@ -92,22 +105,29 @@ export function ChartsPage({ analytics, onBack }: ChartsPageProps) {
           <div className="chart-heading">
             <div>
               <p className="eyebrow">BEST MATCHES</p>
-              <h2>効果の高かった方法</h2>
+              <h2>評価済み記録のカテゴリ内訳</h2>
             </div>
           </div>
           <div className="donut-layout">
             <div
               className="donut-chart"
-              style={{ background: 'conic-gradient(' + donutGradient + ')' }}
+              style={{
+                background: donutGradient
+                  ? 'conic-gradient(' + donutGradient + ')'
+                  : '#e8e4dc',
+              }}
               aria-label={
-                '高評価だった回復方法の割合。' +
+                '評価済み記録のカテゴリ割合。' +
                 analytics.breakdown
                   .map((item) => `${item.label} ${item.percentage}%`)
                   .join('、')
               }
               role="img"
             >
-              <span><strong>35%</strong>散歩</span>
+              <span>
+                <strong>{topBreakdown ? `${topBreakdown.percentage}%` : '0%'}</strong>
+                {topBreakdown?.label ?? 'データなし'}
+              </span>
             </div>
             <ul className="donut-legend">
               {analytics.breakdown.map((item) => (
@@ -128,19 +148,23 @@ export function ChartsPage({ analytics, onBack }: ChartsPageProps) {
             <p className="eyebrow">RECOVERY RANKING</p>
             <h2>あなたに合う回復方法ランキング</h2>
           </div>
-          <span className="muted-text">直近3か月</span>
+          <span className="muted-text">全期間</span>
         </div>
-        <ol>
-          {analytics.ranking.map((item, index) => (
-            <li key={item.label}>
-              <span className="rank-number">{String(index + 1).padStart(2, '0')}</span>
-              <strong>{item.label}</strong>
-              <div className="rank-bar"><i style={{ width: item.score * 10 + '%' }} /></div>
-              <span className="rank-count">{item.count}回</span>
-              <span className="rank-score">{item.score.toFixed(1)}</span>
-            </li>
-          ))}
-        </ol>
+        {analytics.ranking.length ? (
+          <ol>
+            {analytics.ranking.map((item, index) => (
+              <li key={item.label}>
+                <span className="rank-number">{String(index + 1).padStart(2, '0')}</span>
+                <strong>{item.label}</strong>
+                <div className="rank-bar"><i style={{ width: item.score * 10 + '%' }} /></div>
+                <span className="rank-count">{item.count}回</span>
+                <span className="rank-score">{item.score.toFixed(1)}</span>
+              </li>
+            ))}
+          </ol>
+        ) : (
+          <p className="muted-text">評価を記録すると、ランキングが表示されます。</p>
+        )}
       </section>
     </div>
   )

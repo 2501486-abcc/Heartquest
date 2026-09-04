@@ -9,7 +9,6 @@ import { auth } from '../firebase'
 import {
   defaultAnalysis,
   mockAiSuggestions,
-  mockAnalytics,
 } from '../data/mockData'
 import { authenticatedFetch, responseError } from './api'
 import type {
@@ -44,6 +43,33 @@ type SaveRecoveryInput = {
   moodBefore: number
   rating: number
 }
+
+type BackendMonthlyAnalytics = {
+  month: string
+  score: number
+  count: number
+}
+
+type BackendRankingAnalytics = {
+  activity: string
+  score: number
+  count: number
+}
+
+type BackendBreakdownAnalytics = {
+  category: string
+  percentage: number
+  count: number
+}
+
+const breakdownColors = [
+  '#5f9275',
+  '#84a9b5',
+  '#dc9187',
+  '#d8b470',
+  '#927aa3',
+  '#7d9c63',
+]
 
 const toFrontendUser = (backendUser: BackendUser, firebaseUser: FirebaseUser): User => ({
   id: String(backendUser.id),
@@ -169,6 +195,40 @@ export const heartQuestService = {
   },
 
   async getAnalytics(): Promise<AnalyticsData> {
-    return mockAnalytics
+    const [monthlyResponse, rankingResponse, breakdownResponse] = await Promise.all([
+      authenticatedFetch('/analytics/monthly'),
+      authenticatedFetch('/analytics/ranking'),
+      authenticatedFetch('/analytics/breakdown'),
+    ])
+
+    for (const response of [monthlyResponse, rankingResponse, breakdownResponse]) {
+      if (!response.ok) {
+        throw new Error(await responseError(response))
+      }
+    }
+
+    const [monthly, ranking, breakdown] = await Promise.all([
+      monthlyResponse.json() as Promise<BackendMonthlyAnalytics[]>,
+      rankingResponse.json() as Promise<BackendRankingAnalytics[]>,
+      breakdownResponse.json() as Promise<BackendBreakdownAnalytics[]>,
+    ])
+
+    return {
+      monthly: monthly.map((item) => ({
+        ...item,
+        label: `${Number(item.month.slice(5, 7))}月`,
+      })),
+      ranking: ranking.map((item) => ({
+        label: item.activity,
+        score: item.score,
+        count: item.count,
+      })),
+      breakdown: breakdown.map((item, index) => ({
+        label: item.category,
+        percentage: item.percentage,
+        count: item.count,
+        color: breakdownColors[index % breakdownColors.length],
+      })),
+    }
   },
 }

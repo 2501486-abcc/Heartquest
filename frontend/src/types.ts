@@ -45,7 +45,7 @@ export type AiAnalysis = {
 }
 
 export type AnalyticsData = {
-  monthly: Array<{ label: string; score: number }>
-  breakdown: Array<{ label: string; percentage: number; color: string }>
+  monthly: Array<{ month: string; label: string; score: number; count: number }>
+  breakdown: Array<{ label: string; percentage: number; count: number; color: string }>
   ranking: Array<{ label: string; score: number; count: number }>
 }

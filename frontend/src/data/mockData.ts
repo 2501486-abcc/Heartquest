@@ -1,6 +1,5 @@
 import type {
   AiAnalysis,
-  AnalyticsData,
   RecoveryEntry,
   RecoveryMethod,
 } from '../types'
@@ -125,27 +124,4 @@ export const defaultAnalysis: AiAnalysis = {
     '音から離れる休息を組み合わせると、さらに効果が期待できます',
   ],
   nextAction: '次回は散歩の最後に、1分だけ深呼吸を加えてみましょう。',
-}
-
-export const mockAnalytics: AnalyticsData = {
-  monthly: [
-    { label: '4月', score: 5.8 },
-    { label: '5月', score: 6.4 },
-    { label: '6月', score: 7.1 },
-    { label: '7月', score: 6.8 },
-    { label: '8月', score: 7.8 },
-    { label: '9月', score: 8.1 },
-  ],
-  breakdown: [
-    { label: '散歩', percentage: 35, color: '#5f9275' },
-    { label: '音楽', percentage: 25, color: '#84a9b5' },
-    { label: '入浴', percentage: 20, color: '#dc9187' },
-    { label: 'その他', percentage: 20, color: '#d8b470' },
-  ],
-  ranking: [
-    { label: '入浴', score: 8.8, count: 5 },
-    { label: '散歩', score: 8.2, count: 9 },
-    { label: 'ストレッチ', score: 7.6, count: 4 },
-    { label: '音楽', score: 7.1, count: 7 },
-  ],
 }
