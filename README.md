@@ -207,6 +207,33 @@ created_at
 
 ---
 
+# 開発環境とテスト
+
+Issue #16で、開発環境とGitHub Actionsは **Python 3.14** と **Node.js 24** を基準にします。バックエンドの直接依存は `backend/requirements.txt`、フロントエンドの依存は `frontend/package-lock.json` に固定されています。
+
+バックエンドの環境構築とテストは、PowerShellで次を実行します。Firebaseの実資格情報は不要で、認証処理はテスト内でモックされます。
+
+```powershell
+cd backend
+py -3.14 -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install -r requirements.txt
+python -m unittest discover -s tests -v
+```
+
+フロントエンドは `npm install` ではなく、lockfileどおりに導入する `npm ci` を使用します。
+
+```powershell
+cd frontend
+npm ci
+npm run lint
+npm run build
+```
+
+GitHub ActionsはPull Requestと`main`へのpushで同じバックエンドテスト、フロントエンドlint・buildを実行します。Firebaseの秘密鍵やその他の実環境Credentialは登録しません。
+
+---
+
 # 外部公開
 
 Issue #10で、フロントエンドは **Cloudflare Pages**、自宅Windows PC上のバックエンドAPIは **Cloudflare Tunnel** を使って公開する構成に確定しました。
