@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import './App.css'
 import { AppShell } from './components/AppShell'
-import { defaultAnalysis, mockAnalytics } from './data/mockData'
+import { defaultAnalysis } from './data/mockData'
 import { AiSuggestionsPage } from './pages/AiSuggestionsPage'
 import { AnalysisPage } from './pages/AnalysisPage'
 import { ChartsPage } from './pages/ChartsPage'
@@ -29,7 +29,11 @@ function App() {
   const [bookmarkedIds, setBookmarkedIds] = useState<string[]>([])
   const [moodBefore, setMoodBefore] = useState(3)
   const [analysis, setAnalysis] = useState<AiAnalysis>(defaultAnalysis)
-  const [analytics, setAnalytics] = useState<AnalyticsData>(mockAnalytics)
+  const [analytics, setAnalytics] = useState<AnalyticsData>({
+    monthly: [],
+    breakdown: [],
+    ranking: [],
+  })
   const [isLoading, setIsLoading] = useState(false)
   const [isAuthChecking, setIsAuthChecking] = useState(true)
   const [isAiLoading, setIsAiLoading] = useState(false)
@@ -177,6 +181,12 @@ function App() {
       setRecoveries((current) => [savedRecovery, ...current])
       setAnalysis(aiAnalysis)
       setScreen('analysis')
+
+      try {
+        setAnalytics(await heartQuestService.getAnalytics())
+      } catch {
+        setError('記録は保存されましたが、分析データを更新できませんでした。')
+      }
     } catch {
       setError('記録を保存できませんでした。入力内容を残したまま、もう一度お試しください。')
     } finally {
