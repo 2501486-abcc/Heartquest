@@ -23,10 +23,9 @@ export function RecoveryPage({
   const [mood, setMood] = useState(initialMood)
 
   return (
-    <div className="page focused-page">
+    <div className="page focused-page recovery-checkin-page">
       <PageHeader
-        description="今の状態を知ることから、あなたに合う回復がはじまります。"
-        eyebrow="RECOVERY CHECK-IN · 1 / 3"
+        eyebrow="RECOVERY · 1 / 3"
         onBack={onBack}
         title="今の調子は、どのくらい？"
       />
@@ -56,9 +55,6 @@ export function RecoveryPage({
           </div>
         </fieldset>
         <div className="checkin-footer">
-          <p>
-            選択中：<strong>{moods[mood - 1].label}</strong>
-          </p>
           <button className="primary-button" onClick={() => onContinue(mood)} type="button">
             回復方法を選ぶ
             <span aria-hidden="true">→</span>

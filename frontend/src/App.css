@@ -1182,7 +1182,12 @@ button {
   margin: 0 0 14px;
 }
 
-.page-header > p:last-child {
+.method-selection-page .page-header h1 {
+  font-size: clamp(1.2rem, 6vw, 3rem);
+  white-space: nowrap;
+}
+
+.page-header-description {
   color: var(--ink-muted);
   line-height: 1.8;
   margin: 0;
@@ -1262,6 +1267,36 @@ button {
   gap: 28px 44px;
   grid-template-columns: 190px 1fr;
   padding: 48px;
+}
+
+.recovery-checkin-page .page-header {
+  margin-bottom: 18px;
+}
+
+.recovery-checkin-page .page-header .back-button + .eyebrow {
+  margin-top: 14px;
+}
+
+.recovery-checkin-page .page-header h1 {
+  font-size: clamp(1.35rem, 4vw, 3rem);
+  margin-bottom: 0;
+  white-space: nowrap;
+}
+
+.recovery-checkin-page .checkin-card {
+  gap: 20px 30px;
+  grid-template-columns: 150px 1fr;
+  padding: 30px;
+}
+
+.recovery-checkin-page .mood-orb {
+  height: 140px;
+  width: 140px;
+}
+
+.recovery-checkin-page .checkin-footer {
+  justify-content: flex-end;
+  padding-top: 18px;
 }
 
 .mood-orb {
@@ -1791,6 +1826,68 @@ button {
   border-radius: 30px;
   box-shadow: 0 24px 50px rgba(63, 72, 65, 0.08);
   padding: 42px;
+}
+
+.evaluation-page-header {
+  align-items: center;
+  display: flex;
+  gap: 18px;
+  margin-bottom: 16px;
+}
+
+.evaluation-page-header .eyebrow {
+  margin: 0;
+}
+
+.evaluation-page .evaluation-card {
+  padding: 24px 28px;
+}
+
+.evaluation-page .evaluation-method {
+  margin-bottom: 16px;
+  padding: 12px;
+}
+
+.evaluation-page .rating-fieldset {
+  padding-bottom: 18px;
+}
+
+.evaluation-page .rating-fieldset legend {
+  margin-bottom: 6px;
+}
+
+.evaluation-page .rating-value {
+  margin: 0 0 12px;
+}
+
+.evaluation-page .rating-value strong {
+  font-size: 3.25rem;
+}
+
+.evaluation-page .rating-scale label {
+  height: 42px;
+}
+
+.evaluation-page .memo-field {
+  margin-top: 16px;
+}
+
+.evaluation-page .memo-field textarea {
+  line-height: 1.45;
+  margin-top: 6px;
+  padding: 9px 12px;
+  resize: none;
+}
+
+.evaluation-note {
+  color: var(--ink-muted);
+  font-size: 0.78rem;
+  line-height: 1.5;
+  margin: 10px 0 0;
+}
+
+.evaluation-page .evaluation-submit {
+  margin-top: 14px;
 }
 
 .evaluation-method {
@@ -2505,6 +2602,77 @@ button {
   .evaluation-card {
     border-radius: 22px;
     padding: 24px 19px;
+  }
+
+  .recovery-checkin-page .page-header {
+    margin-bottom: 10px;
+  }
+
+  .recovery-checkin-page .page-header .back-button + .eyebrow {
+    margin-top: 8px;
+  }
+
+  .recovery-checkin-page .checkin-card {
+    gap: 12px;
+    grid-template-columns: 1fr;
+    padding: 14px;
+  }
+
+  .recovery-checkin-page .mood-orb {
+    display: none;
+  }
+
+  .recovery-checkin-page .mood-fieldset legend {
+    font-size: 1rem;
+    margin-bottom: 8px;
+  }
+
+  .recovery-checkin-page .mood-options {
+    gap: 6px;
+  }
+
+  .recovery-checkin-page .mood-options label {
+    min-height: 68px;
+    padding: 6px;
+  }
+
+  .recovery-checkin-page .checkin-footer {
+    gap: 0;
+    padding-top: 12px;
+  }
+
+  .evaluation-page-header {
+    gap: 12px;
+    margin-bottom: 10px;
+  }
+
+  .evaluation-page .evaluation-card {
+    padding: 14px;
+  }
+
+  .evaluation-page .evaluation-method {
+    margin-bottom: 10px;
+    padding: 8px 10px;
+  }
+
+  .evaluation-page .rating-fieldset {
+    padding-bottom: 10px;
+  }
+
+  .evaluation-page .rating-value strong {
+    font-size: 2.6rem;
+  }
+
+  .evaluation-page .rating-scale label {
+    height: 40px;
+  }
+
+  .evaluation-page .memo-field {
+    margin-top: 10px;
+  }
+
+  .evaluation-page .evaluation-submit {
+    margin-top: 10px;
   }
 
   .mood-options {

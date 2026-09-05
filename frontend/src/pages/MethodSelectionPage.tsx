@@ -1,7 +1,5 @@
 import { useState } from 'react'
 import { PageHeader } from '../components/PageHeader'
-import { RecoveryMethodCard } from '../components/RecoveryMethodCard'
-import { recoveryMethods } from '../data/mockData'
 import type { RecoveryMethod } from '../types'
 
 type MethodSelectionPageProps = {
@@ -32,10 +30,9 @@ export function MethodSelectionPage({
   }
 
   return (
-    <div className="page">
+    <div className="page method-selection-page">
       <PageHeader
-        description="今の気分や使える時間に合わせて、ひとつ選んでみましょう。"
-        eyebrow="CHOOSE YOUR QUEST · 2 / 3"
+        eyebrow="RECOVERY · 2 / 3"
         onBack={onBack}
         title="今日は、どうやって回復する？"
       />
@@ -51,19 +48,6 @@ export function MethodSelectionPage({
           AIに提案してもらう
           <span aria-hidden="true">→</span>
         </button>
-      </section>
-
-      <div className="method-section-heading">
-        <div>
-          <p className="eyebrow">QUICK PICKS</p>
-          <h2>すぐに選べる回復方法</h2>
-        </div>
-        <span>4件</span>
-      </div>
-      <section className="method-grid">
-        {recoveryMethods.map((method) => (
-          <RecoveryMethodCard key={method.id} method={method} onSelect={onSelect} />
-        ))}
       </section>
 
       <section className="custom-method">
