@@ -1,5 +1,5 @@
 type PageHeaderProps = {
-  description: string
+  description?: string
   eyebrow: string
   onBack?: () => void
   title: string
@@ -21,7 +21,7 @@ export function PageHeader({
       ) : null}
       <p className="eyebrow">{eyebrow}</p>
       <h1>{title}</h1>
-      <p>{description}</p>
+      {description ? <p className="page-header-description">{description}</p> : null}
     </header>
   )
 }

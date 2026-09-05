@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { PageHeader } from '../components/PageHeader'
 import type { RecoveryEntry, RecoveryMethod } from '../types'
 
 type EvaluationPageProps = {
@@ -21,13 +20,14 @@ export function EvaluationPage({
   const [memo, setMemo] = useState(savedRecovery?.memo ?? '')
 
   return (
-    <div className="page focused-page">
-      <PageHeader
-        description="あなた自身の感覚が、次の提案をもっと自分らしくします。"
-        eyebrow="REFLECTION · 3 / 3"
-        onBack={onBack}
-        title="回復できましたか？"
-      />
+    <div className="page focused-page evaluation-page">
+      <header className="evaluation-page-header">
+        <button className="back-button" onClick={onBack} type="button">
+          <span aria-hidden="true">←</span>
+          戻る
+        </button>
+        <p className="eyebrow">RECOVERY · 3 / 3</p>
+      </header>
 
       <section className="evaluation-card">
         <div className={'evaluation-method tone-' + method.tone}>
@@ -73,13 +73,13 @@ export function EvaluationPage({
             maxLength={180}
             onChange={(event) => setMemo(event.target.value)}
             placeholder="例：頭の中が少し静かになって、肩の力が抜けた"
-            rows={4}
+            rows={2}
             value={memo}
           />
           <span className="character-count">{memo.length} / 180</span>
         </label>
 
-        <p>{savedRecovery
+        <p className="evaluation-note">{savedRecovery
           ? '記録は保存済みです。再試行ではAI分析だけを行います。'
           : '感想と過去の回復記録をAI分析に利用します。メールアドレスやパスワードなどの秘密情報は入力しないでください。'}</p>
 
