@@ -95,6 +95,7 @@ const toFrontendUser = (backendUser: BackendUser, firebaseUser: FirebaseUser): U
 const toRecoveryEntry = (recovery: BackendRecovery): RecoveryEntry => ({
   id: String(recovery.id),
   activity: recovery.activity,
+  category: recovery.category,
   memo: recovery.memo ?? '',
   rating: recovery.rating ?? 0,
   aiScore: recovery.ai_score ?? recovery.rating ?? 0,
