@@ -6,10 +6,6 @@ import {
   type User as FirebaseUser,
 } from 'firebase/auth'
 import { auth } from '../firebase'
-import {
-  defaultAnalysis,
-  mockAiSuggestions,
-} from '../data/mockData'
 import { authenticatedFetch, responseError } from './api'
 import type {
   AiAnalysis,
@@ -47,6 +43,12 @@ type BackendBookmark = {
   source: string | null
   created_at: string
 }
+
+type BackendRecommendation = Pick<
+  RecoveryMethod, 'title' | 'description' | 'duration' | 'category' | 'reason'
+> & { source: 'classic' | 'discovery' }
+
+type BackendAnalysis = Omit<AiAnalysis, 'nextAction'> & { next_action: string }
 
 type SaveRecoveryInput = {
   method: RecoveryMethod
@@ -170,8 +172,19 @@ export const heartQuestService = {
     return recoveries.map(toRecoveryEntry)
   },
 
-  async getRecommendations(): Promise<RecoveryMethod[]> {
-    return [...mockAiSuggestions]
+  async getRecommendations(currentMood: number): Promise<RecoveryMethod[]> {
+    const response = await authenticatedFetch('/ai/recommend', {
+      method: 'POST',
+      body: JSON.stringify({ current_mood: currentMood }),
+    })
+    if (!response.ok) throw new Error(await responseError(response))
+    const result = (await response.json()) as { recommendations: BackendRecommendation[] }
+    return result.recommendations.map((item) => ({
+      ...item,
+      id: crypto.randomUUID(),
+      symbol: item.source === 'classic' ? '❋' : '✦',
+      tone: item.source === 'classic' ? 'mint' : 'blue',
+    }))
   },
 
   async getBookmarks(): Promise<Bookmark[]> {
@@ -218,6 +231,7 @@ export const heartQuestService = {
         activity: input.method.title,
         category: input.method.category,
         before_mood: input.moodBefore,
+        before_state: ['かなり疲れた', '少し疲れた', 'ふつう', 'まずまず', '元気'][input.moodBefore - 1],
         memo: input.memo,
         rating: input.rating,
         source: input.method.source,
@@ -233,21 +247,19 @@ export const heartQuestService = {
 
   async analyzeRecovery(
     entry: RecoveryEntry,
-    moodBefore: number,
   ): Promise<AiAnalysis> {
+    const response = await authenticatedFetch('/ai/analyze', {
+      method: 'POST',
+      body: JSON.stringify({ recovery_id: Number(entry.id) }),
+    })
+    if (!response.ok) throw new Error(await responseError(response))
+    const result = (await response.json()) as BackendAnalysis
     return {
-      ...defaultAnalysis,
-      score: entry.aiScore,
-      title:
-        entry.rating >= 8
-          ? entry.activity + 'が、よい回復につながりました'
-          : '小さな変化を、次の回復につなげましょう',
-      summary:
-        '回復前の状態は' +
-        moodBefore +
-        '/5、実施後の自己評価は' +
-        entry.rating +
-        '/10でした。感想と過去の傾向を合わせると、無理なく集中を外す時間が効果的です。',
+      score: result.score,
+      title: result.title,
+      summary: result.summary,
+      insights: result.insights,
+      nextAction: result.next_action,
     }
   },
 

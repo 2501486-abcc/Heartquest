@@ -1,7 +1,6 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import './App.css'
 import { AppShell } from './components/AppShell'
-import { defaultAnalysis } from './data/mockData'
 import { AiSuggestionsPage } from './pages/AiSuggestionsPage'
 import { AnalysisPage } from './pages/AnalysisPage'
 import { ChartsPage } from './pages/ChartsPage'
@@ -37,7 +36,12 @@ function App() {
   const [bookmarkingIds, setBookmarkingIds] = useState<string[]>([])
   const [bookmarkNotice, setBookmarkNotice] = useState('')
   const [moodBefore, setMoodBefore] = useState(3)
-  const [analysis, setAnalysis] = useState<AiAnalysis>(defaultAnalysis)
+  const [analysis, setAnalysis] = useState<AiAnalysis | null>(null)
+  const [analyzedRecovery, setAnalyzedRecovery] = useState<RecoveryEntry | null>(null)
+  const [pendingRecovery, setPendingRecovery] = useState<RecoveryEntry | null>(null)
+  const authGeneration = useRef(0)
+  const saving = useRef(false)
+  const loadingSuggestions = useRef(false)
   const [analytics, setAnalytics] = useState<AnalyticsData>({
     monthly: [],
     breakdown: [],
@@ -51,6 +55,15 @@ function App() {
 
   useEffect(() => {
     const unsubscribe = heartQuestService.observeAuthState(async (authenticatedUser, authError) => {
+      authGeneration.current += 1
+      setSuggestions([])
+      setAnalysis(null)
+      setAnalyzedRecovery(null)
+      setPendingRecovery(null)
+      setIsSaving(false)
+      setIsAiLoading(false)
+      saving.current = false
+      loadingSuggestions.current = false
       if (authError) {
         setUser(null)
         setScreen('login')
@@ -162,52 +175,82 @@ function App() {
   }
 
   const loadSuggestions = async () => {
+    if (loadingSuggestions.current) return
+    loadingSuggestions.current = true
+    const generation = authGeneration.current
     setScreen('ai-suggestions')
     setIsAiLoading(true)
     setError('')
     setBookmarkNotice('')
+    setSuggestions([])
     try {
-      setSuggestions(await heartQuestService.getRecommendations())
-    } catch {
-      setError('AI提案を取得できませんでした。もう一度お試しください。')
+      const methods = await heartQuestService.getRecommendations(moodBefore)
+      if (generation === authGeneration.current) setSuggestions(methods)
+    } catch (aiError) {
+      if (generation === authGeneration.current) {
+        setError(aiError instanceof Error ? aiError.message : 'AI提案を取得できませんでした。もう一度お試しください。')
+      }
     } finally {
-      setIsAiLoading(false)
+      if (generation === authGeneration.current) {
+        setIsAiLoading(false)
+        loadingSuggestions.current = false
+      }
     }
   }
 
   const selectMethod = (method: RecoveryMethod) => {
+    if (saving.current) return
+    setPendingRecovery(null)
     setSelectedMethod(method)
     setScreen('evaluation')
   }
 
   const completeRecovery = async (rating: number, memo: string) => {
-    if (!selectedMethod) return
+    if (!selectedMethod || saving.current) return
+    saving.current = true
+    const generation = authGeneration.current
     setIsSaving(true)
     setError('')
+    let savedRecovery = pendingRecovery
     try {
-      const savedRecovery = await heartQuestService.saveRecovery({
-        method: selectedMethod,
-        memo,
-        moodBefore,
-        rating,
-      })
-      const aiAnalysis = await heartQuestService.analyzeRecovery(
-        savedRecovery,
-        moodBefore,
-      )
-      setRecoveries((current) => [savedRecovery, ...current])
+      if (!savedRecovery) {
+        savedRecovery = await heartQuestService.saveRecovery({
+          method: selectedMethod,
+          memo,
+          moodBefore,
+          rating,
+        })
+        if (generation !== authGeneration.current) return
+        const created = savedRecovery
+        setPendingRecovery(created)
+        setRecoveries((current) => [created, ...current])
+      }
+      const aiAnalysis = await heartQuestService.analyzeRecovery(savedRecovery)
+      if (generation !== authGeneration.current) return
+      const analyzed = { ...savedRecovery, aiScore: aiAnalysis.score, aiComment: aiAnalysis.summary }
+      setRecoveries((current) => current.map((item) => item.id === analyzed.id ? analyzed : item))
       setAnalysis(aiAnalysis)
+      setAnalyzedRecovery(analyzed)
       setScreen('analysis')
 
       try {
-        setAnalytics(await heartQuestService.getAnalytics())
+        const updatedAnalytics = await heartQuestService.getAnalytics()
+        if (generation === authGeneration.current) setAnalytics(updatedAnalytics)
       } catch {
-        setError('記録は保存されましたが、分析データを更新できませんでした。')
+        if (generation === authGeneration.current) setError('記録は保存されましたが、グラフを更新できませんでした。')
       }
-    } catch {
-      setError('記録を保存できませんでした。入力内容を残したまま、もう一度お試しください。')
+    } catch (aiError) {
+      if (generation === authGeneration.current) {
+        const detail = aiError instanceof Error ? aiError.message : 'もう一度お試しください。'
+        setError(savedRecovery
+          ? `記録は保存済みですが、AI分析を完了できませんでした。分析だけを再試行できます。${detail}`
+          : '記録を保存できませんでした。入力内容を残したまま、もう一度お試しください。')
+      }
     } finally {
-      setIsSaving(false)
+      if (generation === authGeneration.current) {
+        setIsSaving(false)
+        saving.current = false
+      }
     }
   }
 
@@ -314,9 +357,11 @@ function App() {
     case 'evaluation':
       content = selectedMethod ? (
         <EvaluationPage
+          key={selectedMethod.id}
           isSaving={isSaving}
+          savedRecovery={pendingRecovery}
           method={selectedMethod}
-          onBack={() => setScreen('methods')}
+          onBack={() => { if (!saving.current) setScreen('methods') }}
           onSubmit={completeRecovery}
         />
       ) : (
@@ -331,7 +376,7 @@ function App() {
       content = (
         <AnalysisPage
           analysis={analysis}
-          latestRecovery={recoveries[0]}
+          latestRecovery={analyzedRecovery ?? undefined}
           onNavigate={setScreen}
         />
       )
