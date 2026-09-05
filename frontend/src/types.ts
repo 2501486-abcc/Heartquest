@@ -38,6 +38,7 @@ export type Bookmark = {
 export type RecoveryEntry = {
   id: string
   activity: string
+  category?: string
   memo: string
   rating: number
   aiScore: number

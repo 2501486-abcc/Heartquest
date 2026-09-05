@@ -1,145 +1,72 @@
-import { useEffect, useState, type CSSProperties } from 'react'
-import type { RecoveryEntry, Screen, User } from '../types'
+import { useState } from 'react'
+import type { User } from '../types'
 
 type HomePageProps = {
-  onNavigate: (screen: Screen) => void
-  recoveries: RecoveryEntry[]
+  onAiSuggestions: (mood: number) => void
+  onContinue: (mood: number) => void
   user: User
 }
 
-const formatDate = (date: string) =>
-  new Intl.DateTimeFormat('ja-JP', {
-    month: 'short',
-    day: 'numeric',
-  }).format(new Date(date))
+const moods = [
+  { label: 'かなり疲れた', symbol: '–' },
+  { label: '少し疲れた', symbol: '⌒' },
+  { label: 'ふつう', symbol: '•' },
+  { label: '穏やか', symbol: '◡' },
+  { label: '元気', symbol: '⌣' },
+]
 
-const formatCurrentDate = (now: Date) => {
-  const weekday = new Intl.DateTimeFormat('ja-JP', { weekday: 'long' }).format(now)
+export function HomePage({ onAiSuggestions, onContinue, user }: HomePageProps) {
+  const [moodIndex, setMoodIndex] = useState(2)
+  const selectedMood = moods[moodIndex]
+  const moodValue = moodIndex + 1
 
-  return `${now.getFullYear()}年　${now.getMonth() + 1}月${now.getDate()}日　${weekday}`
-}
-
-const greetingForHour = (hour: number) => {
-  if (hour >= 4 && hour < 11) return 'おはようございます'
-  if (hour >= 11 && hour < 18) return 'こんにちは'
-  return 'こんばんは'
-}
-
-export function HomePage({
-  onNavigate,
-  recoveries,
-  user,
-}: HomePageProps) {
-  const [currentTime, setCurrentTime] = useState(() => new Date())
-  const average = recoveries.length
-    ? recoveries.reduce((total, recovery) => total + recovery.rating, 0) /
-      recoveries.length
-    : 0
-
-  useEffect(() => {
-    const timer = window.setInterval(() => setCurrentTime(new Date()), 60_000)
-    return () => window.clearInterval(timer)
-  }, [])
+  const moveMood = (difference: number) => {
+    setMoodIndex((current) => Math.min(4, Math.max(0, current + difference)))
+  }
 
   return (
-    <div className="page home-page">
-      <section className="welcome-row">
-        <div>
-          <p className="eyebrow">{formatCurrentDate(currentTime)}</p>
-          <h1>{greetingForHour(currentTime.getHours())}、{user.displayName}さん。</h1>
-          <p className="page-lead">今日は、どんなふうに自分を休ませてあげますか？</p>
+    <div className="page hq-home-page">
+      <section className="hq-home-checkin" aria-labelledby="home-checkin-title">
+        <div className="hq-home-intro">
+          <span className="hq-overline">QUEST 01 · CHECK IN</span>
+          <p>{user.displayName}さん、今日もおつかれさまです。</p>
+          <h1 id="home-checkin-title">いまの自分に、<br />近い気分は？</h1>
+          <p>うまく言葉にできなくても大丈夫です。</p>
         </div>
-        <div className="streak-badge" aria-label="3日連続で記録中">
-          <span aria-hidden="true">✦</span>
-          <strong>3</strong>
-          <span>日連続</span>
-        </div>
-      </section>
 
-      <section className="recovery-hero">
-        <div className="recovery-copy">
-          <span className="soft-label">TODAY'S QUEST</span>
-          <h2>今のあなたに、<br />小さな回復を。</h2>
-          <p>1分のチェックインから、ぴったりの休み方を一緒に探します。</p>
+        <div className="hq-mood-picker">
           <button
-            className="primary-button"
-            onClick={() => onNavigate('recovery')}
+            aria-label="一つ前の気分"
+            disabled={moodIndex === 0}
+            onClick={() => moveMood(-1)}
             type="button"
           >
-            回復クエストをはじめる
-            <span aria-hidden="true">→</span>
+            ‹
+          </button>
+          <div aria-live="polite">
+            <span aria-hidden="true">{selectedMood.symbol}</span>
+            <strong>{selectedMood.label}</strong>
+            <small>{moodValue} / 5</small>
+          </div>
+          <button
+            aria-label="一つ次の気分"
+            disabled={moodIndex === 4}
+            onClick={() => moveMood(1)}
+            type="button"
+          >
+            ›
           </button>
         </div>
-        <div className="recovery-visual" aria-hidden="true">
-          <div className="sun-shape">☼</div>
-          <div className="hill hill-back" />
-          <div className="hill hill-front" />
-          <span className="sparkle sparkle-one">✦</span>
-          <span className="sparkle sparkle-two">·</span>
+
+        <div className="hq-home-actions">
+          <button className="hq-primary-action" onClick={() => onContinue(moodValue)} type="button">
+            次へ進む
+            <span aria-hidden="true">→</span>
+          </button>
+          <button className="hq-text-action" onClick={() => onAiSuggestions(moodValue)} type="button">
+            迷ったらAIと一緒に探す
+          </button>
         </div>
-      </section>
-
-      <section className="home-grid">
-        <article className="summary-card">
-          <div className="section-heading compact-heading">
-            <div>
-              <p className="eyebrow">THIS WEEK</p>
-              <h2>今週の回復</h2>
-            </div>
-            <button className="text-button" onClick={() => onNavigate('charts')} type="button">
-              詳しく見る →
-            </button>
-          </div>
-          <div className="summary-content">
-            <div
-              className="score-ring"
-              style={{ '--score': `${average * 10}%` } as CSSProperties}
-              aria-label={`平均評価 ${average.toFixed(1)}`}
-            >
-              <strong>{average.toFixed(1)}</strong>
-              <span>/ 10</span>
-            </div>
-            <div className="summary-copy">
-              <strong>いいペースです</strong>
-              <p>先週より平均スコアが0.8アップ。短い散歩がよく効いています。</p>
-              <div className="mini-bars" aria-hidden="true">
-                {[5, 7, 6, 8, 7, 9, 8].map((value, index) => (
-                  <span key={index} style={{ height: `${value * 8}%` }} />
-                ))}
-              </div>
-            </div>
-          </div>
-        </article>
-
-        <article className="history-card">
-          <div className="section-heading compact-heading">
-            <div>
-              <p className="eyebrow">RECENT LOG</p>
-              <h2>最近の記録</h2>
-            </div>
-            <button className="icon-button" aria-label="分析を見る" onClick={() => onNavigate('analysis')} type="button">
-              ↗
-            </button>
-          </div>
-          <ul className="history-list">
-            {recoveries.slice(0, 3).map((recovery) => (
-              <li key={recovery.id}>
-                <span className="history-icon" aria-hidden="true">
-                  {recovery.activity.includes('散歩')
-                    ? '♧'
-                    : recovery.activity.includes('音楽')
-                      ? '♫'
-                      : '♨'}
-                </span>
-                <span className="history-copy">
-                  <strong>{recovery.activity}</strong>
-                  <span>{formatDate(recovery.createdAt)}</span>
-                </span>
-                <span className="history-score">{recovery.rating}<small>/10</small></span>
-              </li>
-            ))}
-          </ul>
-        </article>
       </section>
     </div>
   )

@@ -19,14 +19,11 @@ type NavigationItem = {
 
 const sideNavigationItems: NavigationItem[] = [
   { label: 'ホーム', screen: 'home', symbol: '⌂' },
-  { label: '回復する', screen: 'recovery', symbol: '＋' },
   { label: '分析', screen: 'analysis', symbol: '⌁' },
-  { label: '分析（グラフ）', screen: 'charts', symbol: '▥' },
+  { label: '記録', screen: 'charts', symbol: '▤' },
 ]
 
-const bottomNavigationItems: NavigationItem[] = sideNavigationItems.filter(
-  (item) => item.screen !== 'charts',
-)
+const bottomNavigationItems: NavigationItem[] = sideNavigationItems
 
 export function AppShell({
   activeScreen,
@@ -40,10 +37,9 @@ export function AppShell({
   const [isProfileEditorOpen, setIsProfileEditorOpen] = useState(false)
   const activeSideNavigation =
     ['recovery', 'methods', 'ai-suggestions', 'evaluation'].includes(activeScreen)
-      ? 'recovery'
+      ? 'home'
       : activeScreen
-  const activeBottomNavigation =
-    activeSideNavigation === 'charts' ? 'analysis' : activeSideNavigation
+  const activeBottomNavigation = activeSideNavigation
 
   return (
     <div className={'app-shell' + (isSidebarCollapsed ? ' is-sidebar-collapsed' : '')}>

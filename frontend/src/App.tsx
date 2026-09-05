@@ -179,7 +179,7 @@ function App() {
     setUser(updatedUser)
   }
 
-  const loadSuggestions = async () => {
+  const loadSuggestions = async (currentMood = moodBefore) => {
     if (loadingSuggestions.current) return
     loadingSuggestions.current = true
     const generation = authGeneration.current
@@ -189,7 +189,7 @@ function App() {
     setBookmarkNotice('')
     setSuggestions([])
     try {
-      const methods = await heartQuestService.getRecommendations(moodBefore)
+      const methods = await heartQuestService.getRecommendations(currentMood)
       if (generation === authGeneration.current) setSuggestions(methods)
     } catch (aiError) {
       if (generation === authGeneration.current) {
@@ -334,7 +334,7 @@ function App() {
       content = (
         <MethodSelectionPage
           onAiSuggestions={() => void loadSuggestions()}
-          onBack={() => setScreen('recovery')}
+          onBack={() => setScreen('home')}
           onSelect={selectMethod}
         />
       )
@@ -372,7 +372,7 @@ function App() {
       ) : (
         <MethodSelectionPage
           onAiSuggestions={() => void loadSuggestions()}
-          onBack={() => setScreen('recovery')}
+          onBack={() => setScreen('home')}
           onSelect={selectMethod}
         />
       )
@@ -381,18 +381,29 @@ function App() {
       content = (
         <AnalysisPage
           analysis={analysis}
-          latestRecovery={analyzedRecovery ?? undefined}
+          latestRecovery={analyzedRecovery ?? recoveries.find((item) => item.aiComment) ?? undefined}
           onNavigate={setScreen}
+          recoveries={recoveries}
         />
       )
       break
     case 'charts':
-      content = <ChartsPage analytics={analytics} onBack={() => setScreen('analysis')} />
+      content = <ChartsPage analytics={analytics} recoveries={recoveries} />
       break
     case 'home':
     default:
       content = (
-        <HomePage onNavigate={setScreen} recoveries={recoveries} user={user} />
+        <HomePage
+          onAiSuggestions={(mood) => {
+            setMoodBefore(mood)
+            void loadSuggestions(mood)
+          }}
+          onContinue={(mood) => {
+            setMoodBefore(mood)
+            setScreen('methods')
+          }}
+          user={user}
+        />
       )
   }
 
