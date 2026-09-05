@@ -13,6 +13,13 @@ const formatDate = (date: string) =>
     day: 'numeric',
   }).format(new Date(date))
 
+const formatCurrentDate = () => {
+  const now = new Date()
+  const weekday = new Intl.DateTimeFormat('ja-JP', { weekday: 'long' }).format(now)
+
+  return `${now.getFullYear()}年　${now.getMonth() + 1}月${now.getDate()}日　${weekday}`
+}
+
 export function HomePage({ onNavigate, recoveries, user }: HomePageProps) {
   const average = recoveries.length
     ? recoveries.reduce((total, recovery) => total + recovery.rating, 0) /
@@ -23,7 +30,7 @@ export function HomePage({ onNavigate, recoveries, user }: HomePageProps) {
     <div className="page home-page">
       <section className="welcome-row">
         <div>
-          <p className="eyebrow">THURSDAY · 3 SEPTEMBER</p>
+          <p className="eyebrow">{formatCurrentDate()}</p>
           <h1>こんにちは、{user.displayName}さん。</h1>
           <p className="page-lead">今日は、どんなふうに自分を休ませてあげますか？</p>
         </div>
