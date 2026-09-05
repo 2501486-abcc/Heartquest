@@ -9,15 +9,22 @@ type AppShellProps = {
   user: User
 }
 
-const navigationItems: Array<{
+type NavigationItem = {
   label: string
   screen: Screen
   symbol: string
-}> = [
+}
+
+const sideNavigationItems: NavigationItem[] = [
   { label: 'ホーム', screen: 'home', symbol: '⌂' },
   { label: '回復する', screen: 'recovery', symbol: '＋' },
   { label: '分析', screen: 'analysis', symbol: '⌁' },
+  { label: '分析（グラフ）', screen: 'charts', symbol: '▥' },
 ]
+
+const bottomNavigationItems: NavigationItem[] = sideNavigationItems.filter(
+  (item) => item.screen !== 'charts',
+)
 
 export function AppShell({
   activeScreen,
@@ -27,12 +34,12 @@ export function AppShell({
   user,
 }: AppShellProps) {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
-  const activeNavigation =
+  const activeSideNavigation =
     ['recovery', 'methods', 'ai-suggestions', 'evaluation'].includes(activeScreen)
       ? 'recovery'
-      : ['analysis', 'charts'].includes(activeScreen)
-        ? 'analysis'
-        : activeScreen
+      : activeScreen
+  const activeBottomNavigation =
+    activeSideNavigation === 'charts' ? 'analysis' : activeSideNavigation
 
   return (
     <div className={'app-shell' + (isSidebarCollapsed ? ' is-sidebar-collapsed' : '')}>
@@ -61,10 +68,10 @@ export function AppShell({
         </div>
 
         <nav className="side-nav-links" aria-label="メインナビゲーション">
-          {navigationItems.map((item) => (
+          {sideNavigationItems.map((item) => (
             <button
-              aria-current={activeNavigation === item.screen ? 'page' : undefined}
-              className={activeNavigation === item.screen ? 'is-active' : ''}
+              aria-current={activeSideNavigation === item.screen ? 'page' : undefined}
+              className={activeSideNavigation === item.screen ? 'is-active' : ''}
               key={item.screen}
               onClick={() => onNavigate(item.screen)}
               title={isSidebarCollapsed ? item.label : undefined}
@@ -124,10 +131,10 @@ export function AppShell({
       </div>
 
       <nav className="bottom-nav" aria-label="スマホ用メインナビゲーション">
-        {navigationItems.map((item) => (
+        {bottomNavigationItems.map((item) => (
           <button
-            aria-current={activeNavigation === item.screen ? 'page' : undefined}
-            className={activeNavigation === item.screen ? 'is-active' : ''}
+            aria-current={activeBottomNavigation === item.screen ? 'page' : undefined}
+            className={activeBottomNavigation === item.screen ? 'is-active' : ''}
             key={item.screen}
             onClick={() => onNavigate(item.screen)}
             type="button"
