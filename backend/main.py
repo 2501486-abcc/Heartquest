@@ -8,6 +8,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
+from api.ai import router as ai_router
 from api.analytics import router as analytics_router
 from api.bookmarks import router as bookmarks_router
 from api.recoveries import router as recoveries_router
@@ -61,6 +62,7 @@ def create_app(database_path: str | Path | None = None) -> FastAPI:
     application.include_router(recoveries_router)
     application.include_router(bookmarks_router)
     application.include_router(analytics_router)
+    application.include_router(ai_router)
 
     @application.get("/health", tags=["health"])
     def health_check():

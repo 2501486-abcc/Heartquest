@@ -37,8 +37,8 @@ export function AiSuggestionsPage({
       <div className="ai-context-note">
         <span aria-hidden="true">✦</span>
         <p>
-          <strong>今回の見立て</strong>
-          短時間で気分を切り替えられ、これまでとは違う感覚も使える方法を組み合わせました。
+          <strong>提案について</strong>
+          今の気分と直近の回復記録から、定番の方法と新しい選択肢をAIが提案します。
         </p>
       </div>
 

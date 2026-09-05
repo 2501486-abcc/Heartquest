@@ -3,7 +3,7 @@ import { PageHeader } from '../components/PageHeader'
 import type { AiAnalysis, RecoveryEntry, Screen } from '../types'
 
 type AnalysisPageProps = {
-  analysis: AiAnalysis
+  analysis: AiAnalysis | null
   latestRecovery?: RecoveryEntry
   onNavigate: (screen: Screen) => void
 }
@@ -13,6 +13,15 @@ export function AnalysisPage({
   latestRecovery,
   onNavigate,
 }: AnalysisPageProps) {
+  if (!analysis) {
+    return (
+      <div className="page">
+        <PageHeader description="回復を記録して、AIと一緒に振り返りましょう。" eyebrow="YOUR RECOVERY INSIGHT" title="AI分析レポート" />
+        <p>このセッションのAI分析はまだありません。回復を記録すると分析できます。過去の回復記録はホームやグラフで確認できます。</p>
+        <button className="primary-button" onClick={() => onNavigate('recovery')} type="button">回復を記録する</button>
+      </div>
+    )
+  }
   return (
     <div className="page">
       <PageHeader
@@ -32,7 +41,7 @@ export function AnalysisPage({
           <small>/ 10</small>
         </div>
         <div className="analysis-copy">
-          <span className="analysis-badge">✦ POSITIVE</span>
+          <span className="analysis-badge">✦ AI ANALYSIS</span>
           <h2>{analysis.title}</h2>
           <p>{analysis.summary}</p>
           {latestRecovery ? (
