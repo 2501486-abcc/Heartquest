@@ -3,11 +3,12 @@ import { useState } from 'react'
 type LoginPageProps = {
   isLoading: boolean
   onLogin: (email: string, password: string) => Promise<void>
-  onRegister: (email: string, password: string) => Promise<void>
+  onRegister: (email: string, password: string, displayName: string) => Promise<void>
 }
 
 export function LoginPage({ isLoading, onLogin, onRegister }: LoginPageProps) {
   const [isRegistering, setIsRegistering] = useState(false)
+  const [displayName, setDisplayName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [passwordConfirmation, setPasswordConfirmation] = useState('')
@@ -15,6 +16,7 @@ export function LoginPage({ isLoading, onLogin, onRegister }: LoginPageProps) {
 
   const switchMode = () => {
     setIsRegistering((current) => !current)
+    setDisplayName('')
     setPassword('')
     setPasswordConfirmation('')
     setFormError('')
@@ -57,7 +59,7 @@ export function LoginPage({ isLoading, onLogin, onRegister }: LoginPageProps) {
           <h2>{isRegistering ? 'はじめまして' : 'おかえりなさい'}</h2>
           <p className="muted-text">
             {isRegistering
-              ? 'メールアドレスとパスワードでアカウントを作成します。'
+              ? 'ユーザー名、メールアドレス、パスワードでアカウントを作成します。'
               : 'Firebase AuthenticationでHeartQuestにログインします。'}
           </p>
 
@@ -67,17 +69,38 @@ export function LoginPage({ isLoading, onLogin, onRegister }: LoginPageProps) {
               setFormError('')
 
               if (isRegistering) {
+                const normalizedDisplayName = displayName.trim()
+                if (!normalizedDisplayName) {
+                  setFormError('ユーザー名を入力してください。')
+                  return
+                }
                 if (password !== passwordConfirmation) {
                   setFormError('確認用パスワードが一致しません。')
                   return
                 }
-                void onRegister(email, password)
+                void onRegister(email, password, normalizedDisplayName)
                 return
               }
 
               void onLogin(email, password)
             }}
           >
+            {isRegistering ? (
+              <>
+                <label className="field-label" htmlFor="display-name">
+                  ユーザー名
+                </label>
+                <input
+                  autoComplete="nickname"
+                  id="display-name"
+                  maxLength={30}
+                  onChange={(event) => setDisplayName(event.target.value)}
+                  required
+                  type="text"
+                  value={displayName}
+                />
+              </>
+            ) : null}
             <label className="field-label" htmlFor="email">
               メールアドレス
             </label>

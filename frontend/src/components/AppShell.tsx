@@ -1,11 +1,13 @@
 import { useState, type ReactNode } from 'react'
 import type { Screen, User } from '../types'
+import { ProfileEditorDialog } from './ProfileEditorDialog'
 
 type AppShellProps = {
   activeScreen: Screen
   children: ReactNode
   onLogout: () => void
   onNavigate: (screen: Screen) => void
+  onUpdateDisplayName: (displayName: string) => Promise<void>
   user: User
 }
 
@@ -31,9 +33,11 @@ export function AppShell({
   children,
   onLogout,
   onNavigate,
+  onUpdateDisplayName,
   user,
 }: AppShellProps) {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
+  const [isProfileEditorOpen, setIsProfileEditorOpen] = useState(false)
   const activeSideNavigation =
     ['recovery', 'methods', 'ai-suggestions', 'evaluation'].includes(activeScreen)
       ? 'recovery'
@@ -85,20 +89,26 @@ export function AppShell({
           ))}
         </nav>
 
-        <button
-          className="side-profile"
-          onClick={onLogout}
-          title="デモからログアウト"
-          type="button"
-        >
+        <div className="side-profile">
           <span className="profile-avatar" aria-hidden="true">
             は
           </span>
           <span className="side-profile-copy side-nav-label">
-            <strong>{user.displayName}</strong>
-            <small>ログアウト</small>
+            <span className="side-profile-name-row">
+              <strong>{user.displayName}</strong>
+              <button
+                className="profile-edit-button"
+                onClick={() => setIsProfileEditorOpen(true)}
+                type="button"
+              >
+                編集
+              </button>
+            </span>
+            <button className="profile-logout-button" onClick={onLogout} type="button">
+              ログアウト
+            </button>
           </span>
-        </button>
+        </div>
       </aside>
 
       <div className="app-content">
@@ -146,6 +156,14 @@ export function AppShell({
           </button>
         ))}
       </nav>
+
+      {isProfileEditorOpen ? (
+        <ProfileEditorDialog
+          onClose={() => setIsProfileEditorOpen(false)}
+          onUpdateDisplayName={onUpdateDisplayName}
+          user={user}
+        />
+      ) : null}
     </div>
   )
 }

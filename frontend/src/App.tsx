@@ -147,11 +147,11 @@ function App() {
     }
   }
 
-  const handleRegister = async (email: string, password: string) => {
+  const handleRegister = async (email: string, password: string, displayName: string) => {
     setIsLoading(true)
     setError('')
     try {
-      const authenticatedUser = await heartQuestService.register(email, password)
+      const authenticatedUser = await heartQuestService.register(email, password, displayName)
       setUser(authenticatedUser)
       setScreen('home')
 
@@ -172,6 +172,11 @@ function App() {
     } finally {
       setIsLoading(false)
     }
+  }
+
+  const handleUpdateDisplayName = async (displayName: string) => {
+    const updatedUser = await heartQuestService.updateDisplayName(displayName)
+    setUser(updatedUser)
   }
 
   const loadSuggestions = async () => {
@@ -387,7 +392,7 @@ function App() {
     case 'home':
     default:
       content = (
-        <HomePage recoveries={recoveries} user={user} onNavigate={setScreen} />
+        <HomePage onNavigate={setScreen} recoveries={recoveries} user={user} />
       )
   }
 
@@ -396,6 +401,7 @@ function App() {
       activeScreen={screen}
       onLogout={() => void logout()}
       onNavigate={setScreen}
+      onUpdateDisplayName={handleUpdateDisplayName}
       user={user}
     >
       {error ? <div className="status-banner inline-banner">{error}</div> : null}
