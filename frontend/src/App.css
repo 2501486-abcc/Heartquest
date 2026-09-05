@@ -129,7 +129,6 @@ button {
   border: 0;
   border-top: 1px solid var(--line);
   color: var(--ink-soft);
-  cursor: pointer;
   display: grid;
   gap: 12px;
   grid-template-columns: 40px minmax(0, 1fr);
@@ -148,14 +147,43 @@ button {
 .side-profile-copy {
   display: flex;
   flex-direction: column;
+  min-width: 0;
 }
 
-.side-profile-copy strong {
+.side-profile-name-row {
+  align-items: center;
+  display: flex;
+  gap: 7px;
+  min-width: 0;
+}
+
+.side-profile-name-row strong {
   color: var(--ink);
   font-size: 0.88rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.side-profile-copy small {
+.profile-edit-button,
+.profile-logout-button {
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  padding: 0;
+}
+
+.profile-edit-button {
+  color: var(--forest);
+  flex: 0 0 auto;
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.profile-logout-button {
+  align-self: flex-start;
   color: var(--ink-muted);
   font-size: 0.75rem;
   margin-top: 2px;
@@ -405,7 +433,9 @@ button {
 .bottom-nav button:focus-visible,
 .side-nav-links button:focus-visible,
 .side-nav-toggle:focus-visible,
-.side-profile:focus-visible,
+.profile-edit-button:focus-visible,
+.profile-logout-button:focus-visible,
+.profile-editor-close:focus-visible,
 .brand-button:focus-visible {
   outline: 3px solid rgba(234, 112, 101, 0.35);
   outline-offset: 3px;
@@ -1047,6 +1077,81 @@ button {
   transform: translateX(-50%);
   width: min(520px, calc(100% - 32px));
   z-index: 50;
+}
+
+.profile-editor-overlay {
+  align-items: center;
+  background: rgba(38, 48, 42, 0.44);
+  display: flex;
+  inset: 0;
+  justify-content: center;
+  padding: 20px;
+  position: fixed;
+  z-index: 60;
+}
+
+.profile-editor-dialog {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  box-shadow: 0 28px 70px rgba(34, 43, 38, 0.24);
+  padding: 30px;
+  width: min(430px, 100%);
+}
+
+.profile-editor-heading {
+  align-items: flex-start;
+  display: flex;
+  justify-content: space-between;
+}
+
+.profile-editor-heading h2 {
+  font-size: 1.7rem;
+  margin: 0;
+}
+
+.profile-editor-close {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  color: var(--ink-muted);
+  cursor: pointer;
+  display: flex;
+  font-size: 1.6rem;
+  height: 44px;
+  justify-content: center;
+  width: 44px;
+}
+
+.profile-editor-dialog input {
+  background: #fbfaf5;
+  border: 1px solid var(--line-strong);
+  border-radius: 12px;
+  box-sizing: border-box;
+  color: var(--ink);
+  min-height: 48px;
+  outline: none;
+  padding: 0 14px;
+  width: 100%;
+}
+
+.profile-editor-dialog input:focus {
+  border-color: var(--mint);
+  box-shadow: 0 0 0 4px rgba(100, 151, 123, 0.13);
+}
+
+.profile-editor-hint {
+  color: var(--ink-muted);
+  display: block;
+  font-size: 0.75rem;
+  margin-top: 7px;
+}
+
+.profile-editor-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-top: 28px;
 }
 
 .inline-banner {

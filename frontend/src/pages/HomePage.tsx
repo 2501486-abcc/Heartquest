@@ -1,4 +1,4 @@
-import type { CSSProperties } from 'react'
+import { useEffect, useState, type CSSProperties } from 'react'
 import type { RecoveryEntry, Screen, User } from '../types'
 
 type HomePageProps = {
@@ -13,25 +13,40 @@ const formatDate = (date: string) =>
     day: 'numeric',
   }).format(new Date(date))
 
-const formatCurrentDate = () => {
-  const now = new Date()
+const formatCurrentDate = (now: Date) => {
   const weekday = new Intl.DateTimeFormat('ja-JP', { weekday: 'long' }).format(now)
 
   return `${now.getFullYear()}年　${now.getMonth() + 1}月${now.getDate()}日　${weekday}`
 }
 
-export function HomePage({ onNavigate, recoveries, user }: HomePageProps) {
+const greetingForHour = (hour: number) => {
+  if (hour >= 4 && hour < 11) return 'おはようございます'
+  if (hour >= 11 && hour < 18) return 'こんにちは'
+  return 'こんばんは'
+}
+
+export function HomePage({
+  onNavigate,
+  recoveries,
+  user,
+}: HomePageProps) {
+  const [currentTime, setCurrentTime] = useState(() => new Date())
   const average = recoveries.length
     ? recoveries.reduce((total, recovery) => total + recovery.rating, 0) /
       recoveries.length
     : 0
 
+  useEffect(() => {
+    const timer = window.setInterval(() => setCurrentTime(new Date()), 60_000)
+    return () => window.clearInterval(timer)
+  }, [])
+
   return (
     <div className="page home-page">
       <section className="welcome-row">
         <div>
-          <p className="eyebrow">{formatCurrentDate()}</p>
-          <h1>こんにちは、{user.displayName}さん。</h1>
+          <p className="eyebrow">{formatCurrentDate(currentTime)}</p>
+          <h1>{greetingForHour(currentTime.getHours())}、{user.displayName}さん。</h1>
           <p className="page-lead">今日は、どんなふうに自分を休ませてあげますか？</p>
         </div>
         <div className="streak-badge" aria-label="3日連続で記録中">

@@ -84,6 +84,8 @@ const breakdownColors = [
   '#7d9c63',
 ]
 
+let pendingRegistrationDisplayName: string | null = null
+
 const toFrontendUser = (backendUser: BackendUser, firebaseUser: FirebaseUser): User => ({
   id: String(backendUser.id),
   displayName: backendUser.display_name,
@@ -117,10 +119,13 @@ const defaultDisplayName = (firebaseUser: FirebaseUser) => {
   return (emailName || 'HeartQuest User').slice(0, 30)
 }
 
-async function ensureHeartQuestUser(firebaseUser: FirebaseUser): Promise<User> {
+async function ensureHeartQuestUser(
+  firebaseUser: FirebaseUser,
+  initialDisplayName = defaultDisplayName(firebaseUser),
+): Promise<User> {
   const response = await authenticatedFetch('/users/me', {
     method: 'POST',
-    body: JSON.stringify({ display_name: defaultDisplayName(firebaseUser) }),
+    body: JSON.stringify({ display_name: initialDisplayName }),
   })
 
   if (!response.ok) {
@@ -136,9 +141,14 @@ export const heartQuestService = {
     await signInWithEmailAndPassword(auth, email, password)
   },
 
-  async register(email: string, password: string): Promise<User> {
-    const credential = await createUserWithEmailAndPassword(auth, email, password)
-    return ensureHeartQuestUser(credential.user)
+  async register(email: string, password: string, displayName: string): Promise<User> {
+    pendingRegistrationDisplayName = displayName.trim()
+    try {
+      const credential = await createUserWithEmailAndPassword(auth, email, password)
+      return await ensureHeartQuestUser(credential.user, pendingRegistrationDisplayName)
+    } finally {
+      pendingRegistrationDisplayName = null
+    }
   },
 
   observeAuthState(
@@ -151,7 +161,10 @@ export const heartQuestService = {
       }
 
       try {
-        onChange(await ensureHeartQuestUser(firebaseUser))
+        onChange(await ensureHeartQuestUser(
+          firebaseUser,
+          pendingRegistrationDisplayName ?? defaultDisplayName(firebaseUser),
+        ))
       } catch (error) {
         onChange(null, error instanceof Error ? error : new Error('Authentication failed'))
       }
@@ -160,6 +173,23 @@ export const heartQuestService = {
 
   async logout(): Promise<void> {
     await signOut(auth)
+  },
+
+  async updateDisplayName(displayName: string): Promise<User> {
+    const firebaseUser = auth.currentUser
+    if (!firebaseUser) {
+      throw new Error('Firebase user is not authenticated')
+    }
+
+    const response = await authenticatedFetch('/users/me', {
+      method: 'PATCH',
+      body: JSON.stringify({ display_name: displayName.trim() }),
+    })
+    if (!response.ok) {
+      throw new Error(await responseError(response))
+    }
+
+    return toFrontendUser((await response.json()) as BackendUser, firebaseUser)
   },
 
   async getRecoveries(): Promise<RecoveryEntry[]> {
