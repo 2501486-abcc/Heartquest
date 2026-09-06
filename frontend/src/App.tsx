@@ -26,8 +26,52 @@ const bookmarkMatchesMethod = (bookmark: Bookmark, method: RecoveryMethod) =>
   bookmark.category === method.category &&
   bookmark.source === method.source
 
+const restorableScreens: Screen[] = ['home', 'recovery', 'methods', 'analysis', 'charts']
+
+const screenFromLocation = (): Screen | null => {
+  const candidate = window.location.hash.replace(/^#\/?/, '') as Screen
+  return restorableScreens.includes(candidate) ? candidate : null
+}
+
+const locationScreenFor = (screen: Screen): Screen => {
+  if (screen === 'ai-suggestions' || screen === 'evaluation') return 'methods'
+  return restorableScreens.includes(screen) ? screen : 'home'
+}
+
+function AuthLoadingPage() {
+  return (
+    <main className="login-page" aria-busy="true">
+      <section className="login-intro" aria-label="HeartQuest">
+        <div className="login-brand">
+          <span className="brand-mark brand-mark-large" aria-hidden="true">
+            ♥
+          </span>
+          <span>HeartQuest</span>
+        </div>
+        <div>
+          <p className="eyebrow">WELCOME BACK</p>
+          <h1>
+            前回の続きから、
+            <br />
+            準備しています。
+          </h1>
+          <p className="login-lead">保存されたログイン情報を安全に確認しています。</p>
+        </div>
+      </section>
+      <section className="login-panel" aria-live="polite">
+        <div className="login-card">
+          <p className="eyebrow">RESTORING SESSION</p>
+          <h2>少々お待ちください</h2>
+          <p className="muted-text">認証が確認でき次第、自動的に画面を表示します。</p>
+        </div>
+      </section>
+    </main>
+  )
+}
+
 function App() {
-  const [screen, setScreen] = useState<Screen>('login')
+  const [screen, setScreen] = useState<Screen>(() => screenFromLocation() ?? 'home')
+  const requestedScreen = useRef<Screen>(screen)
   const [user, setUser] = useState<User | null>(null)
   const [recoveries, setRecoveries] = useState<RecoveryEntry[]>([])
   const [selectedMethod, setSelectedMethod] = useState<RecoveryMethod | null>(null)
@@ -54,8 +98,32 @@ function App() {
   const [error, setError] = useState('')
 
   useEffect(() => {
+    const restoreScreenFromLocation = () => {
+      const restoredScreen = screenFromLocation()
+      if (!restoredScreen) return
+      requestedScreen.current = restoredScreen
+      if (user) setScreen(restoredScreen)
+    }
+
+    window.addEventListener('hashchange', restoreScreenFromLocation)
+    return () => window.removeEventListener('hashchange', restoreScreenFromLocation)
+  }, [user])
+
+  useEffect(() => {
+    if (isAuthChecking || !user || screen === 'login') return
+
+    const locationScreen = locationScreenFor(screen)
+    requestedScreen.current = locationScreen
+    const nextHash = `#/${locationScreen}`
+    if (window.location.hash !== nextHash) {
+      window.history.replaceState(null, '', nextHash)
+    }
+  }, [isAuthChecking, screen, user])
+
+  useEffect(() => {
     const unsubscribe = heartQuestService.observeAuthState(async (authenticatedUser, authError) => {
       authGeneration.current += 1
+      const generation = authGeneration.current
       setSuggestions([])
       setAnalysis(null)
       setAnalyzedRecovery(null)
@@ -87,22 +155,25 @@ function App() {
       }
 
       setError('')
+      setUser(authenticatedUser)
+      setScreen((current) => current === 'login' ? requestedScreen.current : current)
+      setIsAuthChecking(false)
+      setIsLoading(false)
+
       try {
         const [history, analyticsData, savedBookmarks] = await Promise.all([
           heartQuestService.getRecoveries(),
           heartQuestService.getAnalytics(),
           heartQuestService.getBookmarks(),
         ])
-        setUser(authenticatedUser)
+        if (generation !== authGeneration.current) return
         setRecoveries(history)
         setAnalytics(analyticsData)
         setBookmarks(savedBookmarks)
-        setScreen('home')
       } catch {
-        setError('HeartQuestのデータを読み込めませんでした。もう一度お試しください。')
-      } finally {
-        setIsAuthChecking(false)
-        setIsLoading(false)
+        if (generation === authGeneration.current) {
+          setError('HeartQuestのデータを読み込めませんでした。もう一度お試しください。')
+        }
       }
     })
 
@@ -302,7 +373,11 @@ function App() {
     }
   }
 
-  if (isAuthChecking || !user || screen === 'login') {
+  if (isAuthChecking) {
+    return <AuthLoadingPage />
+  }
+
+  if (!user || screen === 'login') {
     return (
       <>
         {error ? <div className="status-banner">{error}</div> : null}
