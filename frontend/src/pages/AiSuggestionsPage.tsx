@@ -26,10 +26,9 @@ export function AiSuggestionsPage({
   onSelect,
 }: AiSuggestionsPageProps) {
   return (
-    <div className="page">
+    <div className="page ai-suggestions-page">
       <PageHeader
         description="最近の記録と、今のコンディションをもとに選びました。"
-        eyebrow="AI RECOVERY GUIDE"
         onBack={onBack}
         title="今のあなたへの3つの提案"
       />

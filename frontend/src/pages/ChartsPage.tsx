@@ -84,8 +84,7 @@ export function ChartsPage({ analytics, recoveries }: ChartsPageProps) {
   return (
     <div className="page hq-record-page">
       <header className="hq-screen-heading">
-        <span className="hq-brand-orb" aria-hidden="true">h</span>
-        <div><span>MY RECOVERY</span><strong>回復の記録</strong></div>
+        <div><strong>回復の記録</strong></div>
       </header>
 
       <div className="hq-month-picker">
@@ -95,7 +94,6 @@ export function ChartsPage({ analytics, recoveries }: ChartsPageProps) {
       </div>
 
       <section className="hq-record-story">
-        <span className="hq-overline">MONTHLY STORY</span>
         <h1>{storyTitle}</h1>
         <div className="hq-month-score">
           <div><span>月ごとの平均回復スコア</span><strong>{(selectedMonth?.score ?? 0).toFixed(1)}<small>/10</small></strong></div>

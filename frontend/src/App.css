@@ -1263,7 +1263,12 @@ button {
 
 .method-selection-page .page-header h1 {
   font-size: clamp(1.2rem, 6vw, 3rem);
+  margin-top: 54px;
   white-space: nowrap;
+}
+
+.ai-suggestions-page .page-header h1 {
+  margin-top: 54px;
 }
 
 .page-header-description {
@@ -3195,6 +3200,7 @@ button {
   display: flex;
   flex-direction: column;
   gap: 2px;
+  grid-column: 2;
 }
 
 .hq-screen-heading > div span {
@@ -3206,21 +3212,6 @@ button {
 
 .hq-screen-heading > div strong {
   font-size: 1rem;
-}
-
-.hq-brand-orb {
-  align-items: center;
-  background: var(--coral);
-  border-radius: 48% 52% 46% 54%;
-  color: #fff;
-  display: flex;
-  font-family: Georgia, serif;
-  font-size: 1.18rem;
-  font-style: italic;
-  font-weight: 700;
-  height: 38px;
-  justify-content: center;
-  width: 38px;
 }
 
 .hq-analysis-page,
@@ -3412,19 +3403,6 @@ button {
   margin: 70px auto;
   max-width: 560px;
   text-align: center;
-}
-
-.hq-empty-state > span {
-  align-items: center;
-  background: #f2c398;
-  border-radius: 48% 52% 47% 53%;
-  color: #765047;
-  display: flex;
-  font-family: Georgia, serif;
-  font-size: 2rem;
-  height: 88px;
-  justify-content: center;
-  width: 88px;
 }
 
 .hq-empty-state h1 {
