@@ -165,7 +165,6 @@ button {
   white-space: nowrap;
 }
 
-.profile-edit-button,
 .profile-logout-button {
   background: transparent;
   border: 0;
@@ -173,13 +172,17 @@ button {
   padding: 0;
 }
 
-.profile-edit-button {
-  color: var(--forest);
+.profile-avatar-button {
+  cursor: pointer;
   flex: 0 0 auto;
-  font-size: 0.72rem;
-  font-weight: 800;
-  text-decoration: underline;
-  text-underline-offset: 3px;
+  padding: 0;
+  transition: background 160ms ease, border-color 160ms ease, transform 160ms ease;
+}
+
+.profile-avatar-button:hover {
+  background: #dce8db;
+  border-color: rgba(46, 111, 91, 0.28);
+  transform: translateY(-1px);
 }
 
 .profile-logout-button {
@@ -433,7 +436,7 @@ button {
 .bottom-nav button:focus-visible,
 .side-nav-links button:focus-visible,
 .side-nav-toggle:focus-visible,
-.profile-edit-button:focus-visible,
+.profile-avatar-button:focus-visible,
 .profile-logout-button:focus-visible,
 .profile-editor-close:focus-visible,
 .brand-button:focus-visible {
@@ -3724,5 +3727,520 @@ button {
 
   .hq-category-legend {
     grid-template-columns: 1fr;
+  }
+}
+
+/* Keep every piece of readable UI copy at 18px or larger. Decorative glyphs,
+   icons, and marks retain their existing optical sizing. */
+.side-nav-links button,
+.side-profile-name-row strong,
+.profile-logout-button,
+.profile-name,
+.back-button,
+.text-button,
+.eyebrow,
+.page-lead,
+.streak-badge,
+.streak-badge strong,
+.soft-label,
+.score-ring span,
+.summary-copy > strong,
+.summary-copy p,
+.history-copy strong,
+.history-copy span,
+.history-score,
+.history-score small,
+.bottom-nav button,
+.login-lead,
+.login-card .muted-text,
+.field-label,
+.demo-notice,
+.status-banner,
+.profile-editor-hint,
+.refresh-button,
+.secondary-button,
+.recovery-checkin-page .mood-fieldset legend,
+.mood-options span,
+.checkin-footer p,
+.ai-invite-card > div:nth-child(2) > span,
+.ai-invite-card p,
+.method-section-heading > span,
+.method-meta,
+.method-card-copy > p,
+.bookmark-notice,
+.ai-context-note p,
+.suggestion-loading p,
+.evaluation-note,
+.evaluation-method small,
+.evaluation-method strong,
+.rating-value span,
+.rating-scale label,
+.scale-caption,
+.memo-field > span:first-child,
+.memo-field > small,
+.memo-field textarea,
+.character-count,
+.analysis-score > span,
+.analysis-score small,
+.analysis-badge,
+.analysis-copy > p,
+.latest-recovery-chip,
+.insight-list-card li > span,
+.insight-list-card li p,
+.next-action-card > p:not(.eyebrow),
+.large-text-button,
+.metric-card > span,
+.metric-card small,
+.chart-legend-dot,
+.bar-grid span,
+.bar-value,
+.bar-column strong,
+.donut-chart span,
+.donut-legend li,
+.ranking-card .muted-text,
+.rank-number,
+.ranking-card li > strong,
+.rank-count,
+.rank-score,
+.auth-switch,
+.form-error,
+.hq-overline,
+.hq-primary-action,
+.hq-text-action,
+.hq-home-intro > p:first-of-type,
+.hq-home-intro > p:last-child,
+.hq-mood-picker small,
+.hq-screen-heading > div span,
+.hq-screen-heading > div strong,
+.hq-segmented-control button,
+.hq-analysis-kicker strong,
+.hq-analysis-kicker span,
+.hq-score-comparison span,
+.hq-analysis-reading > span,
+.hq-analysis-hint > span,
+.hq-analysis-reading p,
+.hq-analysis-hint p,
+.hq-recent-chart span,
+.hq-recent-chart small,
+.hq-empty-state p,
+.hq-month-score > div > span,
+.hq-month-score small,
+.hq-month-score p,
+.hq-month-score em,
+.hq-monthly-line > div,
+.hq-block-heading span,
+.hq-podium b,
+.hq-podium strong,
+.hq-podium span,
+.hq-podium small,
+.hq-category-legend > span,
+.hq-muted-copy {
+  font-size: var(--font-readable-min);
+}
+
+/* Preserve the quiet visual hierarchy with color and weight instead of tiny type. */
+.eyebrow,
+.soft-label,
+.method-meta,
+.hq-overline,
+.hq-screen-heading > div span {
+  font-weight: 900;
+  letter-spacing: 0.08em;
+}
+
+.page-lead,
+.summary-copy p,
+.history-copy span,
+.login-card .muted-text,
+.demo-notice,
+.profile-editor-hint,
+.checkin-footer p,
+.method-card-copy > p,
+.ai-context-note p,
+.evaluation-note,
+.scale-caption,
+.analysis-copy > p,
+.metric-card > span,
+.rank-count,
+.hq-home-intro > p:last-child,
+.hq-analysis-kicker span,
+.hq-analysis-reading p,
+.hq-analysis-hint p,
+.hq-month-score p,
+.hq-muted-copy {
+  line-height: 1.75;
+}
+
+/* Give the larger copy enough air inside controls and cards. */
+.app-shell {
+  --side-nav-width: 268px;
+}
+
+.side-nav-links button {
+  min-height: 64px;
+  padding: 9px 12px;
+}
+
+.side-profile {
+  gap: 14px;
+  min-height: 92px;
+  padding-top: 20px;
+}
+
+.profile-logout-button {
+  margin-top: 6px;
+  min-height: 34px;
+  padding-block: 4px;
+}
+
+.primary-button,
+.secondary-button,
+.hq-primary-action {
+  min-height: 60px;
+  padding-block: 10px;
+}
+
+.secondary-button {
+  padding-inline: 24px;
+}
+
+.hq-text-action {
+  min-height: 54px;
+  padding: 10px 12px;
+}
+
+.login-card {
+  max-width: 460px;
+  padding: 48px;
+}
+
+.login-card .muted-text {
+  margin-bottom: 32px;
+}
+
+.field-label {
+  margin: 20px 0 9px;
+}
+
+.login-card input,
+.custom-method-form input,
+.custom-method-form select {
+  font-size: var(--font-readable-min);
+  min-height: 56px;
+  padding-inline: 17px;
+}
+
+.auth-switch,
+.demo-notice {
+  gap: 9px;
+  margin-top: 24px;
+}
+
+.checkin-card,
+.evaluation-card,
+.insight-list-card,
+.next-action-card,
+.chart-card,
+.ranking-card {
+  padding: 34px;
+}
+
+.mood-options label {
+  min-height: 100px;
+  padding: 15px 8px;
+}
+
+.method-card {
+  gap: 18px;
+  grid-template-columns: 58px minmax(0, 1fr) auto;
+  padding: 28px;
+}
+
+.method-meta {
+  flex-wrap: wrap;
+  gap: 10px;
+  line-height: 1.5;
+}
+
+.method-category {
+  padding: 6px 10px;
+}
+
+.method-card h3 {
+  margin-block: 10px;
+}
+
+.ai-context-note,
+.bookmark-notice {
+  padding: 22px 24px;
+}
+
+.evaluation-method {
+  padding: 18px 20px;
+}
+
+.rating-scale label {
+  height: 56px;
+}
+
+.scale-caption {
+  gap: 18px;
+  margin-top: 12px;
+}
+
+.memo-field textarea {
+  line-height: 1.65;
+  min-height: 124px;
+  padding: 16px;
+}
+
+/* Charts and rankings need additional room for 18px labels. */
+.chart-overview {
+  gap: 18px;
+  margin-bottom: 26px;
+}
+
+.metric-card {
+  gap: 6px 12px;
+  padding: 26px;
+}
+
+.bar-chart {
+  height: 330px;
+  margin-top: 38px;
+  padding-left: 38px;
+}
+
+.bar-grid {
+  bottom: 48px;
+  grid-template-columns: 30px 1fr;
+  height: 242px;
+}
+
+.bars {
+  gap: 12px;
+  height: 258px;
+}
+
+.donut-layout {
+  gap: 32px;
+}
+
+.donut-legend li {
+  gap: 12px;
+  padding-block: 7px;
+}
+
+.ranking-card li {
+  gap: 18px;
+  grid-template-columns: 34px minmax(130px, auto) 1fr 52px 52px;
+  padding: 20px 0;
+}
+
+.hq-screen-heading {
+  min-height: 84px;
+  padding-bottom: 18px;
+}
+
+.hq-segmented-control button {
+  min-height: 54px;
+  padding: 8px 14px;
+}
+
+.hq-analysis-content {
+  padding-top: 34px;
+}
+
+.hq-analysis-kicker {
+  gap: 24px;
+  padding-bottom: 18px;
+}
+
+.hq-analysis-reading,
+.hq-analysis-hint {
+  padding-block: 28px;
+}
+
+.hq-analysis-hint {
+  padding-inline: 26px;
+}
+
+.hq-recent-chart {
+  gap: 38px;
+  height: 250px;
+  margin-bottom: 18px;
+}
+
+.hq-recent-chart > div {
+  width: 78px;
+}
+
+.hq-month-score {
+  gap: 12px 28px;
+  padding-block: 26px;
+}
+
+.hq-monthly-line svg {
+  height: 240px;
+}
+
+.hq-monthly-line > div {
+  margin-top: -4px;
+}
+
+.hq-record-block {
+  padding-block: 36px;
+}
+
+.hq-podium {
+  gap: 16px;
+  min-height: 226px;
+}
+
+.hq-podium > div {
+  min-height: 176px;
+  padding: 22px 12px;
+}
+
+.hq-podium > div.is-first {
+  min-height: 214px;
+}
+
+.hq-podium b {
+  height: 36px;
+  width: 36px;
+}
+
+.hq-category-legend {
+  gap: 16px 30px;
+  margin-top: 22px;
+}
+
+@media (max-width: 600px) {
+  .app-shell {
+    padding-bottom: calc(132px + env(safe-area-inset-bottom));
+  }
+
+  .bottom-nav {
+    max-width: calc(100% - 16px);
+    padding: 7px;
+    width: 430px;
+  }
+
+  .bottom-nav button {
+    gap: 4px;
+    min-height: 70px;
+    padding: 7px 5px;
+  }
+
+  .login-intro {
+    padding: 32px 22px 42px;
+  }
+
+  .login-panel {
+    padding: 30px 16px 40px;
+  }
+
+  .login-card {
+    padding: 34px 24px;
+  }
+
+  .checkin-card,
+  .evaluation-card,
+  .chart-card,
+  .ranking-card {
+    padding: 26px 20px;
+  }
+
+  .recovery-checkin-page .checkin-card,
+  .evaluation-page .evaluation-card {
+    padding: 20px;
+  }
+
+  .recovery-checkin-page .mood-options label {
+    min-height: 82px;
+    padding: 10px 6px;
+  }
+
+  .method-card,
+  .suggestion-grid .method-card {
+    gap: 16px;
+    grid-template-columns: 48px minmax(0, 1fr) auto;
+    padding: 22px 20px;
+  }
+
+  .suggestion-grid .method-card {
+    grid-template-columns: 48px minmax(0, 1fr);
+  }
+
+  .rating-scale label {
+    height: 52px;
+  }
+
+  .bar-chart {
+    height: 350px;
+    padding-left: 34px;
+  }
+
+  .bar-grid {
+    bottom: 54px;
+    grid-template-columns: 28px 1fr;
+    height: 246px;
+  }
+
+  .bars {
+    height: 264px;
+  }
+
+  .ranking-card li {
+    gap: 12px 14px;
+    grid-template-columns: 34px minmax(0, 1fr) 54px;
+    padding: 22px 0;
+  }
+
+  .hq-analysis-kicker,
+  .hq-block-heading {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .hq-recent-chart {
+    gap: 18px;
+    height: 260px;
+    justify-content: flex-start;
+    overflow-x: auto;
+    padding-inline: 10px;
+  }
+
+  .hq-recent-chart > div {
+    flex: 0 0 72px;
+  }
+
+  .hq-monthly-line {
+    overflow-x: auto;
+    padding-bottom: 8px;
+  }
+
+  .hq-monthly-line svg,
+  .hq-monthly-line > div {
+    min-width: 520px;
+  }
+
+  .hq-monthly-line svg {
+    height: 210px;
+  }
+
+  .hq-podium {
+    align-items: stretch;
+    grid-template-columns: 1fr;
+    min-height: 0;
+  }
+
+  .hq-podium > div,
+  .hq-podium > div.is-first {
+    border-radius: 18px;
+    min-height: 0;
+    padding: 22px 18px;
   }
 }
