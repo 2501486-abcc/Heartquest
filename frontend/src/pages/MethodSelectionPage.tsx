@@ -37,7 +37,6 @@ export function MethodSelectionPage({
   return (
     <div className="page method-selection-page">
       <PageHeader
-        eyebrow="RECOVERY · 2 / 3"
         onBack={onBack}
         title="今日は、どうやって回復する？"
       />
@@ -45,7 +44,6 @@ export function MethodSelectionPage({
       <section className="ai-invite-card">
         <div className="ai-spark" aria-hidden="true">✦</div>
         <div>
-          <span>AI RECOVERY GUIDE</span>
           <h2>迷ったら、AIと一緒に探せます</h2>
           <p>これまでの記録から「定番」と「まだ試していない方法」を提案します。</p>
         </div>
@@ -57,7 +55,6 @@ export function MethodSelectionPage({
 
       <section className="custom-method">
         <div>
-          <p className="eyebrow">YOUR OWN IDEA</p>
           <h2>自分で回復方法を決める</h2>
         </div>
         <div className="custom-method-form">

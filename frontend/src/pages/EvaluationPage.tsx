@@ -26,7 +26,6 @@ export function EvaluationPage({
           <span aria-hidden="true">←</span>
           戻る
         </button>
-        <p className="eyebrow">RECOVERY · 3 / 3</p>
       </header>
 
       <section className="evaluation-card">

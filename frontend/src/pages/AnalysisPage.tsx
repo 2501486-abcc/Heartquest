@@ -23,11 +23,9 @@ export function AnalysisPage({ analysis, latestRecovery, onNavigate, recoveries 
     return (
       <div className="page hq-analysis-page">
         <header className="hq-screen-heading">
-          <span className="hq-brand-orb" aria-hidden="true">h</span>
           <div><span>今日の回復</span><strong>AIフィードバック</strong></div>
         </header>
         <section className="hq-empty-state">
-          <span aria-hidden="true">◡</span>
           <h1>今日のフィードバックは<br />まだありません。</h1>
           <p>ホームで今の気分を選び、回復を記録するとAIと一緒に振り返れます。</p>
           <button className="hq-primary-action" onClick={() => onNavigate('home')} type="button">
@@ -46,7 +44,6 @@ export function AnalysisPage({ analysis, latestRecovery, onNavigate, recoveries 
   return (
     <div className="page hq-analysis-page">
       <header className="hq-screen-heading">
-        <span className="hq-brand-orb" aria-hidden="true">h</span>
         <div><span>今日の回復</span><strong>AIフィードバック</strong></div>
       </header>
 

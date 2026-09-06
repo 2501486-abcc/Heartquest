@@ -1,6 +1,6 @@
 type PageHeaderProps = {
   description?: string
-  eyebrow: string
+  eyebrow?: string
   onBack?: () => void
   title: string
 }
@@ -19,7 +19,7 @@ export function PageHeader({
           戻る
         </button>
       ) : null}
-      <p className="eyebrow">{eyebrow}</p>
+      {eyebrow ? <p className="eyebrow">{eyebrow}</p> : null}
       <h1>{title}</h1>
       {description ? <p className="page-header-description">{description}</p> : null}
     </header>
