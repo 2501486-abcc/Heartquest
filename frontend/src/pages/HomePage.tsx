@@ -8,11 +8,11 @@ type HomePageProps = {
 }
 
 const moods = [
-  { label: 'かなり疲れた', symbol: '–' },
-  { label: '少し疲れた', symbol: '⌒' },
-  { label: 'ふつう', symbol: '•' },
-  { label: '穏やか', symbol: '◡' },
-  { label: '元気', symbol: '⌣' },
+  { label: 'かなり疲れた' },
+  { label: '少し疲れた' },
+  { label: 'ふつう' },
+  { label: '穏やか' },
+  { label: '元気' },
 ]
 
 export function HomePage({ onAiSuggestions, onContinue, user }: HomePageProps) {
@@ -44,7 +44,10 @@ export function HomePage({ onAiSuggestions, onContinue, user }: HomePageProps) {
             ‹
           </button>
           <div aria-live="polite">
-            <span aria-hidden="true">{selectedMood.symbol}</span>
+            <span
+              aria-hidden="true"
+              className={`hq-mood-character is-mood-${moodIndex + 1}`}
+            />
             <strong>{selectedMood.label}</strong>
             <small>{moodValue} / 5</small>
           </div>
