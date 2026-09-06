@@ -228,7 +228,9 @@ class AiApiTests(unittest.TestCase):
             item["source"] = "classic"
         duplicate = copy.deepcopy(RECOMMENDATIONS)
         duplicate["recommendations"][1]["title"] = duplicate["recommendations"][0]["title"]
-        for result in (same_source, duplicate, {"recommendations": []}):
+        unsupported_category = copy.deepcopy(RECOMMENDATIONS)
+        unsupported_category["recommendations"][0]["category"] = "その他"
+        for result in (same_source, duplicate, unsupported_category, {"recommendations": []}):
             self.result = result
             self.assertEqual(self.post("/ai/recommend", {}).status_code, 502)
 

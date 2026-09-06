@@ -1,6 +1,10 @@
 import { useState } from 'react'
 import { PageHeader } from '../components/PageHeader'
-import type { RecoveryMethod } from '../types'
+import {
+  RECOVERY_CATEGORIES,
+  type RecoveryCategory,
+  type RecoveryMethod,
+} from '../types'
 
 type MethodSelectionPageProps = {
   onAiSuggestions: () => void
@@ -14,15 +18,16 @@ export function MethodSelectionPage({
   onSelect,
 }: MethodSelectionPageProps) {
   const [customTitle, setCustomTitle] = useState('')
+  const [customCategory, setCustomCategory] = useState<RecoveryCategory | ''>('')
 
   const selectCustomMethod = () => {
-    if (!customTitle.trim()) return
+    if (!customTitle.trim() || !customCategory) return
     onSelect({
       id: 'custom-' + Date.now(),
       title: customTitle.trim(),
       description: '自分で決めた回復方法',
       duration: '自由',
-      category: 'マイプラン',
+      category: customCategory,
       symbol: '✎',
       tone: 'rose',
       source: 'custom',
@@ -66,9 +71,20 @@ export function MethodSelectionPage({
             placeholder="例：ベランダでコーヒーを飲む"
             value={customTitle}
           />
+          <label className="sr-only" htmlFor="custom-method-category">カテゴリ</label>
+          <select
+            id="custom-method-category"
+            onChange={(event) => setCustomCategory(event.target.value as RecoveryCategory | '')}
+            value={customCategory}
+          >
+            <option value="">カテゴリを選択</option>
+            {RECOVERY_CATEGORIES.map((category) => (
+              <option key={category} value={category}>{category}</option>
+            ))}
+          </select>
           <button
             className="secondary-button"
-            disabled={!customTitle.trim()}
+            disabled={!customTitle.trim() || !customCategory}
             onClick={selectCustomMethod}
             type="button"
           >

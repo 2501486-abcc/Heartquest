@@ -10,6 +10,8 @@ import httpx
 from fastapi import HTTPException
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints, model_validator
 
+from categories import RECOVERY_CATEGORIES, RecoveryCategory
+
 
 logger = logging.getLogger("heartquest.ai")
 OPENAI_RESPONSES_URL = "https://api.openai.com/v1/responses"
@@ -27,7 +29,7 @@ class Recommendation(StructuredModel):
     title: ShortText
     description: Text
     duration: Annotated[str, StringConstraints(min_length=1, max_length=50)]
-    category: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=100)]
+    category: RecoveryCategory
     source: Literal["classic", "discovery"]
     reason: Text
 
@@ -135,8 +137,9 @@ current_moodは1〜5（1=かなり疲れた、5=元気）、ratingは1〜10の�
 履歴のbefore_mood/after_moodは最大10で保存可能ですが入力元の尺度は不明です。
 履歴の気分値をcurrent_moodと直接比較したり、尺度を断定したりしないでください。
 """
-_RECOMMEND_INSTRUCTIONS = """今の気分と過去の回復履歴をもとに、無理なく試せる回復方法を3件提案してください。
+_RECOMMEND_INSTRUCTIONS = f"""今の気分と過去の回復履歴をもとに、無理なく試せる回復方法を3件提案してください。
 定番（classic）と新しい選択肢（discovery）の両方を含めてください。
+categoryは{'・'.join(RECOVERY_CATEGORIES)}のいずれかにしてください。
 discoveryは提供された履歴にない方法を優先し、全期間で未経験と断定しないでください。
 各提案の理由には、履歴がある場合はその傾向、ない場合は一般的な提案であることを示してください。
 """
