@@ -1568,11 +1568,20 @@ button {
 }
 
 .method-meta {
+  align-items: center;
   color: var(--forest);
+  display: flex;
   font-size: 0.75rem;
   font-weight: 850;
+  gap: 8px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
+}
+
+.method-category {
+  background: #e4eee7;
+  border-radius: 999px;
+  padding: 4px 8px;
 }
 
 .method-card h3 {
@@ -1588,28 +1597,19 @@ button {
   margin: 0;
 }
 
-.method-select-button {
-  align-items: center;
+.method-card-select-surface {
   background: transparent;
   border: 0;
-  color: var(--forest);
+  border-radius: inherit;
   cursor: pointer;
-  display: flex;
-  font-size: 0.82rem;
-  font-weight: 850;
-  gap: 8px;
-  grid-column: 2 / -1;
-  justify-self: start;
-  min-height: 44px;
-  padding: 2px 0;
+  inset: 0;
+  position: absolute;
+  z-index: 1;
 }
 
-.method-select-button span {
-  transition: transform 160ms ease;
-}
-
-.method-select-button:hover span {
-  transform: translateX(3px);
+.method-card-select-surface:focus-visible {
+  outline: 3px solid var(--mint);
+  outline-offset: 3px;
 }
 
 .bookmark-button {
@@ -1621,6 +1621,8 @@ button {
   min-height: 44px;
   min-width: 44px;
   padding: 0;
+  position: relative;
+  z-index: 2;
 }
 
 .bookmark-button:disabled {
@@ -1661,6 +1663,7 @@ button {
 }
 
 .custom-method-form input,
+.custom-method-form select,
 .memo-field textarea {
   background: var(--paper);
   border: 1px solid var(--line-strong);
@@ -1676,7 +1679,13 @@ button {
   min-width: 0;
 }
 
+.custom-method-form select {
+  min-height: 46px;
+  min-width: 150px;
+}
+
 .custom-method-form input:focus,
+.custom-method-form select:focus,
 .memo-field textarea:focus {
   border-color: var(--mint);
   box-shadow: 0 0 0 4px rgba(100, 151, 123, 0.12);
@@ -1722,28 +1731,32 @@ button {
 }
 
 .suggestion-grid .method-card {
-  grid-template-columns: 54px 1fr auto;
+  grid-template-columns: 54px 1fr;
+  padding: 24px;
 }
 
-.suggestion-reason {
-  background: #f5f2e9;
-  border-radius: 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
+.suggestion-grid .bookmark-button {
+  grid-column: 2;
+  grid-row: 1;
+  justify-self: end;
+}
+
+.suggestion-grid .method-card-copy {
+  grid-column: 1 / -1;
+}
+
+.suggestion-grid .method-card-copy > p {
+  font-size: calc(1.16rem + 3px);
+  letter-spacing: -0.02em;
+  line-height: 1.35;
   margin-top: 16px;
-  padding: 12px;
 }
 
-.suggestion-reason strong {
-  color: var(--forest);
-  font-size: 0.75rem;
-}
-
-.suggestion-reason span {
-  color: var(--ink-muted);
-  font-size: 0.8rem;
-  line-height: 1.55;
+@media (min-width: 1001px) {
+  .suggestion-grid .method-card-copy > p {
+    font-size: calc(1.16rem + 1px);
+    line-height: 1.5;
+  }
 }
 
 .refresh-button {
@@ -2711,6 +2724,11 @@ button {
     padding: 18px;
   }
 
+  .suggestion-grid .method-card {
+    grid-template-columns: 46px 1fr;
+    padding: 20px;
+  }
+
   .method-symbol {
     border-radius: 13px;
     height: 44px;
@@ -2722,7 +2740,8 @@ button {
     flex-direction: column;
   }
 
-  .custom-method-form input {
+  .custom-method-form input,
+  .custom-method-form select {
     min-height: 46px;
   }
 
@@ -2862,6 +2881,7 @@ button {
 
   .login-card input,
   .custom-method-form input,
+  .custom-method-form select,
   .memo-field textarea {
     font-size: 1rem;
   }

@@ -4,6 +4,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints
 
+from categories import RECOVERY_CATEGORIES
 from database import get_connection
 from services.firebase import get_current_firebase_uid
 
@@ -68,6 +69,11 @@ def create_bookmark(
     request: Request,
     firebase_uid: str = Depends(get_current_firebase_uid),
 ):
+    if payload.category is not None and payload.category not in RECOVERY_CATEGORIES:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            detail="Unsupported recovery category",
+        )
     database_path = _database_path(request)
     user_id = _current_user_id(database_path, firebase_uid)
     bookmark_data = payload.model_dump()

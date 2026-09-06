@@ -60,7 +60,7 @@ class BookmarksApiTests(unittest.TestCase):
             json={
                 "title": "  緑のある道を散歩  ",
                 "description": "外の空気を吸いながら歩く",
-                "category": "からだ",
+                "category": "運動",
                 "source": "classic",
             },
         )
@@ -135,6 +135,7 @@ class BookmarksApiTests(unittest.TestCase):
             {"title": "   "},
             {"title": "a" * 201},
             {"title": "散歩", "description": "a" * 1_001},
+            {"title": "散歩", "category": "その他"},
             {"title": "散歩", "category": "a" * 101},
             {"title": "散歩", "source": "a" * 101},
         )

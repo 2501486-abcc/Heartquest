@@ -433,6 +433,7 @@ class RecoveriesApiTests(unittest.TestCase):
         for payload in (
             {"activity": "", "category": "運動"},
             {"activity": "散歩", "category": "   "},
+            {"activity": "散歩", "category": "その他"},
             {"activity": "散歩", "category": "運動", "before_mood": 11},
             {"activity": "散歩", "category": "運動", "after_mood": 0},
             {"activity": "散歩", "category": "運動", "rating": 11},

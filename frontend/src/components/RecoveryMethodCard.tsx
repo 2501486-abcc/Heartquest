@@ -24,16 +24,14 @@ export function RecoveryMethodCard({
       </div>
       <div className="method-card-copy">
         <span className="method-meta">
-          {method.category} · {method.duration}
+          <span className="method-category">カテゴリ：{method.category}</span>
+          <span>{method.duration}</span>
         </span>
         <h3>{method.title}</h3>
-        <p>{method.description}</p>
-        {showReason && method.reason ? (
-          <div className="suggestion-reason">
-            <strong>AIのおすすめ理由</strong>
-            <span>{method.reason}</span>
-          </div>
-        ) : null}
+        <p>
+          {method.description}
+          {showReason && method.reason ? ` ${method.reason}` : ''}
+        </p>
       </div>
       {onBookmark ? (
         <button
@@ -47,10 +45,12 @@ export function RecoveryMethodCard({
           {bookmarked ? '★' : '☆'}
         </button>
       ) : null}
-      <button className="method-select-button" onClick={() => onSelect(method)} type="button">
-        これを試す
-        <span aria-hidden="true">→</span>
-      </button>
+      <button
+        aria-label={`${method.title}を選ぶ`}
+        className="method-card-select-surface"
+        onClick={() => onSelect(method)}
+        type="button"
+      />
     </article>
   )
 }

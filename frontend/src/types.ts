@@ -14,12 +14,26 @@ export type User = {
   email: string
 }
 
+export const RECOVERY_CATEGORIES = [
+  '運動',
+  '休息',
+  '睡眠',
+  'リラックス',
+  '自然',
+  '音楽',
+  '食事',
+  '趣味',
+  '交流',
+] as const
+
+export type RecoveryCategory = typeof RECOVERY_CATEGORIES[number]
+
 export type RecoveryMethod = {
   id: string
   title: string
   description: string
   duration: string
-  category: string
+  category: RecoveryCategory
   symbol: string
   tone: 'mint' | 'blue' | 'gold' | 'rose'
   source: 'classic' | 'discovery' | 'custom'
