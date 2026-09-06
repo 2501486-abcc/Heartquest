@@ -86,19 +86,18 @@ export function AppShell({
         </nav>
 
         <div className="side-profile">
-          <span className="profile-avatar" aria-hidden="true">
-            は
-          </span>
+          <button
+            aria-label="プロフィールを編集"
+            className="profile-avatar profile-avatar-button"
+            onClick={() => setIsProfileEditorOpen(true)}
+            title="プロフィールを編集"
+            type="button"
+          >
+            <span aria-hidden="true">は</span>
+          </button>
           <span className="side-profile-copy side-nav-label">
             <span className="side-profile-name-row">
               <strong>{user.displayName}</strong>
-              <button
-                className="profile-edit-button"
-                onClick={() => setIsProfileEditorOpen(true)}
-                type="button"
-              >
-                編集
-              </button>
             </span>
             <button className="profile-logout-button" onClick={onLogout} type="button">
               ログアウト
