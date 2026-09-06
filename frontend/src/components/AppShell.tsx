@@ -42,7 +42,13 @@ export function AppShell({
   const activeBottomNavigation = activeSideNavigation
 
   return (
-    <div className={'app-shell' + (isSidebarCollapsed ? ' is-sidebar-collapsed' : '')}>
+    <div
+      className={
+        'app-shell' +
+        (isSidebarCollapsed ? ' is-sidebar-collapsed' : '') +
+        (activeScreen === 'home' ? ' is-home-screen' : '')
+      }
+    >
       <aside className="side-nav">
         <div className="side-nav-header">
           <button

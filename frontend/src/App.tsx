@@ -469,10 +469,6 @@ function App() {
     default:
       content = (
         <HomePage
-          onAiSuggestions={(mood) => {
-            setMoodBefore(mood)
-            void loadSuggestions(mood)
-          }}
           onContinue={(mood) => {
             setMoodBefore(mood)
             setScreen('methods')
