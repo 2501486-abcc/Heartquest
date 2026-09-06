@@ -3101,13 +3101,6 @@ button {
   margin: 18px 0 14px;
 }
 
-.hq-home-intro > p:last-child {
-  color: var(--ink-muted);
-  font-size: 1rem;
-  line-height: 1.75;
-  margin: 0;
-}
-
 .hq-mood-picker {
   align-items: center;
   display: grid;
@@ -3905,7 +3898,6 @@ button {
 .hq-primary-action,
 .hq-text-action,
 .hq-home-intro > p:first-of-type,
-.hq-home-intro > p:last-child,
 .hq-mood-picker small,
 .hq-screen-heading > div span,
 .hq-screen-heading > div strong,
@@ -3959,7 +3951,6 @@ button {
 .analysis-copy > p,
 .metric-card > span,
 .rank-count,
-.hq-home-intro > p:last-child,
 .hq-analysis-kicker span,
 .hq-analysis-reading p,
 .hq-analysis-hint p,
@@ -4339,5 +4330,93 @@ button {
     border-radius: 18px;
     min-height: 0;
     padding: 22px 18px;
+  }
+}
+
+/* Keep the home check-in within the viewport while preserving scrolling elsewhere. */
+.app-shell.is-home-screen {
+  height: 100svh;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.is-home-screen .app-content {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+
+.is-home-screen .app-main {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  padding-block: clamp(12px, 3svh, 28px);
+  width: 100%;
+}
+
+.is-home-screen .hq-home-page {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+}
+
+.is-home-screen .hq-home-checkin {
+  padding-block: clamp(8px, 2svh, 24px);
+}
+
+.is-home-screen .hq-mood-picker {
+  margin-block: clamp(18px, 4svh, 36px);
+}
+
+@media (max-width: 900px) {
+  .app-shell.is-home-screen {
+    padding-bottom: 0;
+  }
+
+  .is-home-screen .app-main {
+    padding-bottom: calc(104px + env(safe-area-inset-bottom));
+  }
+}
+
+@media (max-height: 720px) {
+  .is-home-screen .hq-home-checkin {
+    padding-block: 0;
+  }
+
+  .is-home-screen .hq-home-intro > p:first-of-type {
+    margin-top: 0;
+  }
+
+  .is-home-screen .hq-home-intro h1 {
+    font-size: 2rem;
+    margin-block: 8px;
+  }
+
+  .is-home-screen .hq-mood-picker {
+    margin-block: 10px;
+  }
+
+  .is-home-screen .hq-mood-picker > div > span {
+    background-position-y: -79px;
+    height: 88px;
+    margin-bottom: 6px;
+    width: 88px;
+  }
+}
+
+@media (max-width: 900px) and (max-height: 720px) {
+  .is-home-screen .topbar {
+    padding-block: 10px;
+  }
+
+  .is-home-screen .app-main {
+    padding-block: 4px calc(88px + env(safe-area-inset-bottom));
+  }
+}
+
+@media (min-width: 901px) and (max-height: 720px) {
+  .is-home-screen .app-main {
+    padding-block: 4px;
   }
 }
