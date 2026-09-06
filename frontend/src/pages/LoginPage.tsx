@@ -24,7 +24,7 @@ export function LoginPage({ isLoading, onLogin, onRegister }: LoginPageProps) {
 
   return (
     <main className="login-page">
-      <section className="login-intro" aria-labelledby="login-title">
+      <section className="login-intro" aria-label="HeartQuest">
         <div className="login-brand">
           <span className="brand-mark brand-mark-large" aria-hidden="true">
             ♥
